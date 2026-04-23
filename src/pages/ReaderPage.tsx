@@ -204,11 +204,12 @@ export default function ReaderPage() {
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 shrink-0 transition-opacity duration-300"
+        className="flex items-center justify-between px-4 py-3 shrink-0 transition-opacity duration-300 sticky top-0 z-40"
         style={{
           opacity: controlsVisible ? 1 : 0,
           pointerEvents: controlsVisible ? 'auto' : 'none',
           borderBottom: '1px solid var(--bg-tertiary)',
+          backgroundColor: 'var(--bg-primary)',
         }}
       >
         <button
