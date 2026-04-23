@@ -43,15 +43,6 @@ export default function RsvpDisplay({ token }: Props) {
   return (
     <div className="flex items-center justify-center flex-1 select-none cursor-default">
       <div className="relative w-full max-w-2xl px-4">
-        {/* ORP guide line */}
-        <div
-          className="absolute top-0 bottom-0 w-px"
-          style={{
-            left: '50%',
-            backgroundColor: 'var(--bg-tertiary)',
-          }}
-        />
-
         {/* Word display — ORP char pinned to center */}
         <div
           className="relative whitespace-nowrap"
