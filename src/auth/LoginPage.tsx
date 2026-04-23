@@ -27,6 +27,7 @@ export default function LoginPage({ initialMode = 'signin' }: { initialMode?: Mo
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [pendingVerification, setPendingVerification] = useState<string | null>(null);
 
   const next = params.get('next') ?? '/app';
 
@@ -63,6 +64,15 @@ export default function LoginPage({ initialMode = 'signin' }: { initialMode?: Mo
       setError(error);
       return;
     }
+    if (mode === 'signup') {
+      // With email confirmation enabled, signUp resolves but no session is
+      // created until the user clicks the verification link. Detect that.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setPendingVerification(email);
+        return;
+      }
+    }
     navigate(next, { replace: true });
   }
 
@@ -74,6 +84,50 @@ export default function LoginPage({ initialMode = 'signin' }: { initialMode?: Mo
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> and restart the dev server.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pendingVerification) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center p-6">
+        <div
+          className="w-full max-w-sm rounded-xl p-6 shadow-lg text-center"
+          style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+        >
+          <div
+            className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center"
+            style={{ background: 'rgba(59,130,246,0.15)' }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--accent)' }}>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold mb-2">Check your email</h1>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            We sent a confirmation link to <span style={{ color: 'var(--text-primary)' }}>{pendingVerification}</span>.
+            Click it to finish creating your account.
+          </p>
+          <p className="text-xs mt-4" style={{ color: 'var(--text-secondary)' }}>
+            Don&apos;t see it? Check your spam folder, or{' '}
+            <button
+              onClick={() => {
+                setPendingVerification(null);
+                setMode('signup');
+              }}
+              className="underline"
+              style={{ color: 'var(--accent)' }}
+            >
+              try a different email
+            </button>.
+          </p>
+          <div className="mt-6">
+            <Link to="/" className="text-xs underline" style={{ color: 'var(--text-secondary)' }}>
+              Back to home
+            </Link>
+          </div>
         </div>
       </div>
     );
