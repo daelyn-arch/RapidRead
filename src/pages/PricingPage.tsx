@@ -7,7 +7,7 @@ import { useAuth } from '@/auth/useAuth';
 const FREE_FEATURES = [
   'Import unlimited EPUB / TXT files',
   'Context-aware RSVP reader',
-  'Dialogue &amp; unfamiliar word slowdowns',
+  'Dialogue & unfamiliar word slowdowns',
   'Themes (dark, light, sepia)',
   'Works offline (PWA)',
 ];
@@ -78,7 +78,7 @@ export default function PricingPage() {
               {FREE_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2">
                   <span style={{ color: 'var(--accent)' }}>✓</span>
-                  <span dangerouslySetInnerHTML={{ __html: f }} />
+                  <span>{f}</span>
                 </li>
               ))}
             </ul>

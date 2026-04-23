@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id,last_portal_at')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -22,11 +22,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'No Stripe customer on file. Subscribe first.' });
     }
 
+    // 5-second per-user cooldown
+    if (profile.last_portal_at) {
+      const sinceMs = Date.now() - new Date(profile.last_portal_at).getTime();
+      if (sinceMs < 5000) {
+        res.setHeader('Retry-After', '5');
+        return res.status(429).json({ error: 'Too many requests. Please wait a few seconds.' });
+      }
+    }
+
     const appUrl = process.env.APP_URL ?? 'http://localhost:5173';
     const session = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
       return_url: `${appUrl}/app/account`,
     });
+
+    await supabaseAdmin
+      .from('profiles')
+      .update({ last_portal_at: new Date().toISOString() })
+      .eq('id', user.id);
 
     return res.status(200).json({ url: session.url });
   } catch (e) {

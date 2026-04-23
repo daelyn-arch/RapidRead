@@ -24,9 +24,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Find or create Stripe customer linked to this Supabase user
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('stripe_customer_id,email')
+      .select('stripe_customer_id,email,last_checkout_at')
       .eq('id', user.id)
       .maybeSingle();
+
+    // 5-second per-user cooldown to blunt accidental spam and scripted abuse
+    if (profile?.last_checkout_at) {
+      const sinceMs = Date.now() - new Date(profile.last_checkout_at).getTime();
+      if (sinceMs < 5000) {
+        res.setHeader('Retry-After', '5');
+        return res.status(429).json({ error: 'Too many requests. Please wait a few seconds.' });
+      }
+    }
 
     let customerId = profile?.stripe_customer_id ?? null;
     if (!customerId) {
@@ -52,6 +61,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success_url: `${appUrl}/app/account?checkout=success`,
       cancel_url: `${appUrl}/pricing?checkout=cancel`,
     });
+
+    // Stamp the rate-limit cooldown AFTER successfully creating a session so
+    // transient Stripe errors don't leave a user locked out.
+    await supabaseAdmin
+      .from('profiles')
+      .update({ last_checkout_at: new Date().toISOString() })
+      .eq('id', user.id);
 
     return res.status(200).json({ url: session.url });
   } catch (e) {
