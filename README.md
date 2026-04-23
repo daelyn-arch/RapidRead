@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# RapidRead
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+RSVP (Rapid Serial Visual Presentation) speed reader with context-aware speed control.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **RSVP Reading** - One word at a time, no eye movement needed
+- **Adjustable Speed** - Base WPM in 25 WPM increments
+- **Context-Aware Speed** - Automatic speed adjustments for:
+  - Dialogue (text in quotes)
+  - Unfamiliar/fictional words (detected via 275k-word English dictionary)
+  - Sentence endings, paragraph breaks, punctuation, long words
+- **Custom Known Words** - Add character names, places, etc. so they don't trigger slowdowns
+- **EPUB & TXT Support** - Import books in either format
+- **Progress Tracking** - Auto-saves reading position
+- **Themes** - Dark, light, and sepia modes
+- **PWA** - Installable, works offline
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Vite + React 19 + TypeScript + Tailwind CSS 4 + Zustand 5
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Keyboard Shortcuts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| Key | Action |
+|---|---|
+| Space | Play / Pause |
+| Left/Right Arrow | Skip word (Shift = 10 words) |
+| Up/Down Arrow | Speed +/- 25 WPM |
+| [ / ] | Previous / Next chapter |
+| Esc | Back to library |
