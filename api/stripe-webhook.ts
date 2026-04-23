@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type Stripe from 'stripe';
-import { stripe } from './_lib/stripe';
-import { supabaseAdmin } from './_lib/supabaseAdmin';
+import { stripe } from './_lib/stripe.js';
+import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 
 // Vercel: receive the raw body so the Stripe signature verifies correctly.
 export const config = { api: { bodyParser: false } };

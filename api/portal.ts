@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { stripe } from './_lib/stripe';
-import { supabaseAdmin, getUserFromRequest } from './_lib/supabaseAdmin';
+import { stripe } from './_lib/stripe.js';
+import { supabaseAdmin, getUserFromRequest } from './_lib/supabaseAdmin.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
