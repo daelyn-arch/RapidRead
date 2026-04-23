@@ -27,3 +27,8 @@ Thumbs.db
 # Test books (copyrighted)
 *.epub
 *.mobi
+
+# Playwright outputs
+test-results
+playwright-report
+

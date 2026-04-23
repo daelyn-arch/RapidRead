@@ -1,0 +1,25 @@
+import { defineConfig } from '@playwright/test';
+
+/**
+ * Separate config for the production audit. Targets the live Vercel URL, no
+ * local webserver, takes screenshots of every screen and verifies key flows.
+ *
+ * Run: npx playwright test --config=playwright.audit.config.ts
+ */
+export default defineConfig({
+  testDir: './tests',
+  testMatch: /audit\.spec\.ts$/,
+  timeout: 60000,
+  retries: 0,
+  reporter: [['list']],
+  use: {
+    baseURL: process.env.AUDIT_URL ?? 'https://rapidread-six.vercel.app',
+    headless: true,
+    viewport: { width: 1280, height: 900 },
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
+  },
+  projects: [
+    { name: 'chromium', use: { browserName: 'chromium' } },
+  ],
+});
