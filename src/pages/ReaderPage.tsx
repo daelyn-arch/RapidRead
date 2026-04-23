@@ -159,26 +159,33 @@ export default function ReaderPage() {
           Library
         </button>
 
-        <button
-          onClick={() => setShowChapterNav(true)}
-          className="text-sm truncate max-w-[200px] hover:opacity-80"
-          style={{ color: 'var(--text-primary)' }}
-          title="Table of Contents"
-        >
-          {chapters[currentChapterIndex]?.title || bookMeta.title}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowChapterNav(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity text-sm"
+            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+            title="Table of Contents"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="15" y2="18" />
+            </svg>
+            Contents
+          </button>
 
-        <button
-          onClick={() => navigate('/settings')}
-          className="p-2 rounded-lg hover:opacity-80 transition-opacity"
-          style={{ color: 'var(--text-secondary)' }}
-          title="Settings"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-        </button>
+          <button
+            onClick={() => navigate('/settings')}
+            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--text-secondary)' }}
+            title="Settings"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* RSVP Display */}

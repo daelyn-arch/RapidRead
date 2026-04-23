@@ -5,12 +5,25 @@ interface Props {
   token: WordToken | null;
 }
 
+// Context-based word colors
+const CONTEXT_COLORS = {
+  dialogue: '#60a5fa',     // blue for dialogue
+  unfamiliar: '#fbbf24',   // amber for unfamiliar/fictional words
+  normal: 'var(--text-primary)',
+};
+
+function getWordColor(token: WordToken): string {
+  if (token.context.isDialogue) return CONTEXT_COLORS.dialogue;
+  if (token.context.isUnfamiliar) return CONTEXT_COLORS.unfamiliar;
+  return CONTEXT_COLORS.normal;
+}
+
 export default function RsvpDisplay({ token }: Props) {
   const { fontSize, showORP, orpColor, fontFamily } = useSettingsStore(s => s.settings);
 
   if (!token) {
     return (
-      <div className="flex items-center justify-center flex-1">
+      <div className="flex items-center justify-center flex-1 cursor-default">
         <span
           className="opacity-30"
           style={{ fontSize: `${fontSize}rem`, fontFamily }}
@@ -25,34 +38,11 @@ export default function RsvpDisplay({ token }: Props) {
   const before = word.slice(0, orpIndex);
   const orp = word[orpIndex] || '';
   const after = word.slice(orpIndex + 1);
+  const wordColor = getWordColor(token);
 
   return (
     <div className="flex items-center justify-center flex-1 select-none cursor-default">
-      <div className="relative">
-        {/* Context indicator */}
-        {context.isDialogue && (
-          <div
-            className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full"
-            style={{
-              backgroundColor: 'var(--bg-tertiary)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            dialogue
-          </div>
-        )}
-        {context.isUnfamiliar && (
-          <div
-            className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full"
-            style={{
-              backgroundColor: 'rgba(251, 191, 36, 0.2)',
-              color: '#fbbf24',
-            }}
-          >
-            unfamiliar
-          </div>
-        )}
-
+      <div className="relative w-full max-w-2xl px-4">
         {/* ORP guide line */}
         <div
           className="absolute top-0 bottom-0 w-px"
@@ -62,38 +52,47 @@ export default function RsvpDisplay({ token }: Props) {
           }}
         />
 
-        {/* Word display */}
+        {/* Word display — ORP char pinned to center */}
         <div
-          className="flex items-center"
+          className="relative whitespace-nowrap"
           style={{ fontSize: `${fontSize}rem`, fontFamily }}
         >
+          {/* Before ORP: right-aligned, ending at center */}
           <span
-            className="text-right"
+            className="inline-block text-right"
             style={{
-              minWidth: '45%',
-              color: 'var(--text-primary)',
+              width: '50%',
+              color: wordColor,
             }}
           >
             {before}
           </span>
+          {/* ORP character: at center */}
           <span
             style={{
-              color: showORP ? orpColor : 'var(--text-primary)',
+              color: showORP ? orpColor : wordColor,
               fontWeight: showORP ? 700 : 400,
             }}
           >
             {orp}
           </span>
-          <span
-            className="text-left"
-            style={{
-              minWidth: '45%',
-              color: 'var(--text-primary)',
-            }}
-          >
+          {/* After ORP: left-aligned, starting after center */}
+          <span style={{ color: wordColor }}>
             {after}
           </span>
         </div>
+
+        {/* Context indicator dot */}
+        {(context.isDialogue || context.isUnfamiliar) && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 text-[10px] mt-1"
+            style={{ color: wordColor, top: '100%' }}
+          >
+            {context.isDialogue && context.isUnfamiliar
+              ? '\u25CF \u25CF'
+              : '\u25CF'}
+          </div>
+        )}
       </div>
     </div>
   );
