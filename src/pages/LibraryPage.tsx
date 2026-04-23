@@ -90,6 +90,13 @@ export default function LibraryPage() {
           </div>
         )}
       </main>
+
+      {/* Version */}
+      <footer className="py-3 text-center text-xs" style={{ color: 'var(--text-secondary)' }}>
+        v{APP_VERSION}
+      </footer>
     </div>
   );
 }
+
+const APP_VERSION = __APP_VERSION__;

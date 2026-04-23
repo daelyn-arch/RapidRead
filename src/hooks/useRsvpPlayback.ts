@@ -11,6 +11,12 @@ export function useRsvpPlayback() {
   const getActiveProfile = useSettingsStore(s => s.getActiveProfile);
   const updateProgress = useLibraryStore(s => s.updateProgress);
 
+  // Subscribe to the full active profile so WPM changes trigger a re-sync
+  const activeProfile = useSettingsStore(s => {
+    const prof = s.settings.profiles.find(p => p.id === s.settings.activeProfileId);
+    return prof ?? s.settings.profiles[0];
+  });
+
   useEffect(() => {
     const profile = getActiveProfile();
     const controller = new PlaybackController(profile, {
@@ -29,14 +35,16 @@ export function useRsvpPlayback() {
     return () => {
       controller.destroy();
     };
-  }, [getActiveProfile, setCurrentToken, setPlaying]);
+  // Only recreate controller on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Update controller's profile when it changes
+  // Sync profile to controller whenever WPM or rules change (works while paused too)
   useEffect(() => {
-    if (controllerRef.current) {
-      controllerRef.current.setProfile(getActiveProfile());
+    if (controllerRef.current && activeProfile) {
+      controllerRef.current.setProfile(activeProfile);
     }
-  }, [getActiveProfile]);
+  }, [activeProfile]);
 
   // Load tokens when they change
   useEffect(() => {

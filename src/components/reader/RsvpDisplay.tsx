@@ -27,7 +27,7 @@ export default function RsvpDisplay({ token }: Props) {
   const after = word.slice(orpIndex + 1);
 
   return (
-    <div className="flex items-center justify-center flex-1 select-none">
+    <div className="flex items-center justify-center flex-1 select-none cursor-default">
       <div className="relative">
         {/* Context indicator */}
         {context.isDialogue && (
