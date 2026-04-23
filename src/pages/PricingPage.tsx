@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import UpgradeButton from '@/billing/UpgradeButton';
+import { startCheckout } from '@/billing/startCheckout';
 import { useIsPro } from '@/billing/useIsPro';
 import { useAuth } from '@/auth/useAuth';
 
@@ -21,9 +22,38 @@ const PRO_FEATURES = [
 ];
 
 export default function PricingPage() {
-  const [plan, setPlan] = useState<'monthly' | 'yearly'>('monthly');
+  const [params, setParams] = useSearchParams();
+  const initialPlan = params.get('plan') === 'yearly' ? 'yearly' : 'monthly';
+  const [plan, setPlan] = useState<'monthly' | 'yearly'>(initialPlan);
+  const [autoError, setAutoError] = useState<string | null>(null);
   const isPro = useIsPro();
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
+  const autoRanFor = useRef<string | null>(null);
+
+  // If a freshly-signed-in user was sent here with ?upgrade=1, immediately
+  // kick off the Stripe checkout instead of making them click twice.
+  useEffect(() => {
+    if (loading) return;
+    if (!session || isPro) return;
+    if (params.get('upgrade') !== '1') return;
+    const marker = session.user.id;
+    if (autoRanFor.current === marker) return;
+    autoRanFor.current = marker;
+
+    const resumePlan = (params.get('plan') === 'yearly' ? 'yearly' : 'monthly') as 'monthly' | 'yearly';
+
+    (async () => {
+      const { error, url } = await startCheckout(resumePlan);
+      if (url) {
+        window.location.assign(url);
+        return;
+      }
+      setAutoError(error);
+      const next = new URLSearchParams(params);
+      next.delete('upgrade');
+      setParams(next, { replace: true });
+    })();
+  }, [loading, session, isPro, params, setParams]);
 
   return (
     <div className="min-h-[100dvh] safe-top" style={{ color: 'var(--text-primary)' }}>
@@ -38,6 +68,22 @@ export default function PricingPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 pb-24">
+        {params.get('upgrade') === '1' && !autoError && session && !isPro && (
+          <div
+            className="rounded-lg p-3 text-sm text-center mt-2"
+            style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+          >
+            Resuming your upgrade…
+          </div>
+        )}
+        {autoError && (
+          <div
+            className="rounded-lg p-3 text-sm text-center mt-2"
+            style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+          >
+            Could not resume checkout: {autoError}. Please click Upgrade below to try again.
+          </div>
+        )}
         <div className="text-center mt-6">
           <h1 className="text-3xl md:text-4xl font-semibold">Pricing</h1>
           <p className="mt-3" style={{ color: 'var(--text-secondary)' }}>

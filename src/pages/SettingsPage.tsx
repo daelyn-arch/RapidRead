@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSettingsStore } from '@/store/settingsStore';
 import SpeedProfileEditor from '@/components/settings/SpeedProfileEditor';
 import KnownWordManager from '@/components/settings/KnownWordManager';
+import ManageLibrary from '@/components/settings/ManageLibrary';
 import type { Theme } from '@/types/settings';
 
 const THEMES: { value: Theme; label: string }[] = [
@@ -77,7 +78,7 @@ export default function SettingsPage() {
         style={{ borderColor: 'var(--bg-tertiary)' }}
       >
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/app')}
           className="flex items-center gap-2 hover:opacity-80"
           style={{ color: 'var(--accent)' }}
         >
@@ -226,6 +227,9 @@ export default function SettingsPage() {
 
         {/* Known Words */}
         <KnownWordManager />
+
+        {/* Manage library — book deletion lives here, not in the grid */}
+        <ManageLibrary />
 
         {/* Keyboard shortcuts reference */}
         <div>

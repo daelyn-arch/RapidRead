@@ -169,7 +169,7 @@ export default function ReaderPage() {
     speedDown: () => setBaseWpm(getActiveProfile().baseWpm - 25),
     prevChapter: () => loadChapter(currentChapterIndex - 1),
     nextChapter: () => loadChapter(currentChapterIndex + 1),
-    goBack: () => navigate('/'),
+    goBack: () => navigate('/app'),
   }), [playback, setBaseWpm, getActiveProfile, loadChapter, currentChapterIndex, navigate]);
 
   useKeyboardControls(keyboardActions);
@@ -188,7 +188,7 @@ export default function ReaderPage() {
       <div className="flex flex-col items-center justify-center min-h-screen gap-4" data-theme={theme}
         style={{ backgroundColor: 'var(--bg-primary)' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Book not found</p>
-        <button onClick={() => navigate('/')} style={{ color: 'var(--accent)' }}>
+        <button onClick={() => navigate('/app')} style={{ color: 'var(--accent)' }}>
           Back to Library
         </button>
       </div>
@@ -213,7 +213,7 @@ export default function ReaderPage() {
         }}
       >
         <button
-          onClick={() => { saveProgress(); navigate('/'); }}
+          onClick={() => { saveProgress(); navigate('/app'); }}
           className="flex items-center gap-2 hover:opacity-80"
           style={{ color: 'var(--accent)' }}
         >
@@ -264,7 +264,7 @@ export default function ReaderPage() {
 
           {/* Settings */}
           <button
-            onClick={() => { saveProgress(); navigate('/settings'); }}
+            onClick={() => { saveProgress(); navigate('/app/settings'); }}
             className="p-2 rounded-lg hover:opacity-80 transition-opacity"
             style={{ color: 'var(--text-secondary)' }}
             title="Settings"

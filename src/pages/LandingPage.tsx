@@ -98,12 +98,27 @@ export default function LandingPage() {
     <div className="min-h-[100dvh] safe-top" style={{ color: 'var(--text-primary)' }}>
       <header className="flex items-center justify-between max-w-5xl mx-auto px-6 py-5">
         <Link to="/" className="font-semibold tracking-tight">RapidRead</Link>
-        <nav className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          <Link to="/pricing" className="hover:underline">Pricing</Link>
-          <Link to="/login" className="hover:underline">Sign in</Link>
+        <nav className="flex items-center gap-3 text-sm">
+          <Link
+            to="/pricing"
+            className="hover:underline hidden sm:inline"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Pricing
+          </Link>
+          <Link
+            to="/login"
+            className="rounded-md px-3 py-1.5 border"
+            style={{
+              borderColor: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Sign in
+          </Link>
           <Link
             to="/app"
-            className="rounded-md px-3 py-1.5"
+            className="rounded-md px-3 py-1.5 font-medium"
             style={{ background: 'var(--accent)', color: 'white' }}
           >
             Try free

@@ -2,26 +2,20 @@ import { useNavigate } from 'react-router-dom';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useBookImport } from '@/hooks/useBookImport';
-import { deleteBookContent } from '@/services/storageService';
 import ImportButton from '@/components/library/ImportButton';
 import BookList from '@/components/library/BookList';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
-  const { books, progress, removeBook } = useLibraryStore();
+  const { books, progress } = useLibraryStore();
   const theme = useSettingsStore(s => s.settings.theme);
   const { importFile, importing, error, clearError } = useBookImport();
 
   const handleImport = async (file: File) => {
     const meta = await importFile(file);
     if (meta) {
-      navigate(`/read/${meta.id}`);
+      navigate(`/app/read/${meta.id}`);
     }
-  };
-
-  const handleDelete = async (bookId: string) => {
-    removeBook(bookId);
-    await deleteBookContent(bookId);
   };
 
   return (
@@ -41,8 +35,20 @@ export default function LibraryPage() {
         >
           RapidRead
         </h1>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => navigate('/app/account')}
+            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--text-secondary)' }}
+            title="Account"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </button>
         <button
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate('/app/settings')}
           className="p-2 rounded-lg hover:opacity-80 transition-opacity"
           style={{ color: 'var(--text-secondary)' }}
           title="Settings"
@@ -52,6 +58,7 @@ export default function LibraryPage() {
             <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
           </svg>
         </button>
+        </div>
       </header>
 
       {/* Content */}
@@ -84,8 +91,7 @@ export default function LibraryPage() {
             <BookList
               books={books}
               progress={progress}
-              onBookClick={id => navigate(`/read/${id}`)}
-              onBookDelete={handleDelete}
+              onBookClick={id => navigate(`/app/read/${id}`)}
             />
           </div>
         )}

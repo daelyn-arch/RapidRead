@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
-import { supabase } from '@/lib/supabaseClient';
+import { startCheckout } from './startCheckout';
 
 interface Props {
   plan?: 'monthly' | 'yearly';
@@ -17,33 +17,19 @@ export default function UpgradeButton({ plan = 'monthly', className, children }:
 
   async function onClick() {
     if (!session) {
-      navigate(`/signup?next=${encodeURIComponent('/pricing?upgrade=1')}`);
+      const next = `/pricing?upgrade=1&plan=${plan}`;
+      navigate(`/signup?next=${encodeURIComponent(next)}`);
       return;
     }
     setBusy(true);
     setError(null);
-    try {
-      const { data: { session: fresh } } = await supabase.auth.getSession();
-      const token = fresh?.access_token;
-      if (!token) throw new Error('Not signed in.');
-
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ plan }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok || !body?.url) {
-        throw new Error(body?.error ?? `Checkout failed (${res.status})`);
-      }
-      window.location.assign(body.url as string);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setBusy(false);
+    const { error, url } = await startCheckout(plan);
+    if (url) {
+      window.location.assign(url);
+      return;
     }
+    setError(error);
+    setBusy(false);
   }
 
   return (

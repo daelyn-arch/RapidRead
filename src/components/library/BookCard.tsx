@@ -4,17 +4,16 @@ interface Props {
   book: BookMeta;
   progress?: ReadingProgress;
   onClick: () => void;
-  onDelete: () => void;
 }
 
-export default function BookCard({ book, progress, onClick, onDelete }: Props) {
+export default function BookCard({ book, progress, onClick }: Props) {
   const progressPercent = progress
     ? Math.round((progress.globalWordIndex / book.totalWords) * 100)
     : 0;
 
   return (
     <div
-      className="rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative group"
+      className="rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative"
       style={{ backgroundColor: 'var(--bg-secondary)' }}
       onClick={onClick}
     >
@@ -84,19 +83,6 @@ export default function BookCard({ book, progress, onClick, onDelete }: Props) {
           </div>
         )}
       </div>
-
-      {/* Delete button */}
-      <button
-        onClick={e => { e.stopPropagation(); onDelete(); }}
-        className="absolute top-2 right-2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ backgroundColor: 'var(--bg-secondary)' }}
-        title="Remove book"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
     </div>
   );
 }

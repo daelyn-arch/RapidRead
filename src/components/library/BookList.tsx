@@ -5,10 +5,9 @@ interface Props {
   books: BookMeta[];
   progress: Record<string, ReadingProgress>;
   onBookClick: (bookId: string) => void;
-  onBookDelete: (bookId: string) => void;
 }
 
-export default function BookList({ books, progress, onBookClick, onBookDelete }: Props) {
+export default function BookList({ books, progress, onBookClick }: Props) {
   if (books.length === 0) return null;
 
   return (
@@ -19,7 +18,6 @@ export default function BookList({ books, progress, onBookClick, onBookDelete }:
           book={book}
           progress={progress[book.id]}
           onClick={() => onBookClick(book.id)}
-          onDelete={() => onBookDelete(book.id)}
         />
       ))}
     </div>
