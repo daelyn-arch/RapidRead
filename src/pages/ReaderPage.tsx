@@ -38,36 +38,44 @@ export default function ReaderPage() {
 
   const bookMeta = books.find(b => b.id === bookId);
 
-  // Load book and dictionary
+  // Load book and dictionary — only re-run when bookId changes
   useEffect(() => {
     if (!bookId) return;
+    let cancelled = false;
     setBook(bookId);
 
     const init = async () => {
       setLoading(true);
-      await loadDictionary();
-      const content = await loadBookContent(bookId);
-      if (content) {
-        setChapters(content);
-        // Resume from saved progress
-        const progress = getProgress(bookId);
-        const startChapter = progress?.chapterIndex ?? 0;
-        setChapter(startChapter);
+      try {
+        await loadDictionary();
+        const content = await loadBookContent(bookId);
+        if (cancelled) return;
+        if (content) {
+          setChapters(content);
+          const progress = getProgress(bookId);
+          const startChapter = progress?.chapterIndex ?? 0;
+          setChapter(startChapter);
 
-        const dictionary = getDictionary();
-        const chapterTokens = tokenize(
-          content[startChapter].rawText,
-          content[startChapter].startWordIndex,
-          dictionary,
-          customKnownWords,
-        );
-        setTokens(chapterTokens);
+          const dictionary = getDictionary();
+          const words = useSettingsStore.getState().settings.customKnownWords;
+          const chapterTokens = tokenize(
+            content[startChapter].rawText,
+            content[startChapter].startWordIndex,
+            dictionary,
+            words,
+          );
+          setTokens(chapterTokens);
+        }
+      } catch (err) {
+        console.error('Failed to load book:', err);
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
 
     init();
-  }, [bookId, setBook, setChapter, setTokens, getProgress, customKnownWords]);
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId]);
 
   const loadChapter = useCallback((index: number) => {
     if (index < 0 || index >= chapters.length) return;

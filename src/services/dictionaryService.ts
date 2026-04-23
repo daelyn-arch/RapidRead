@@ -5,10 +5,18 @@ export async function loadDictionary(): Promise<void> {
   if (wordSet) return;
   if (loading) return loading;
 
-  loading = fetch('/dictionaries/en-275k.json')
-    .then(res => res.json())
+  const base = import.meta.env.BASE_URL || '/';
+  loading = fetch(`${base}dictionaries/en-275k.json`)
+    .then(res => {
+      if (!res.ok) throw new Error(`Dictionary fetch failed: ${res.status}`);
+      return res.json();
+    })
     .then((words: string[]) => {
       wordSet = new Set(words);
+    })
+    .catch(err => {
+      console.warn('Failed to load dictionary, continuing without it:', err);
+      loading = null; // Allow retry
     });
 
   return loading;
