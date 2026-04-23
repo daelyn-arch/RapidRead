@@ -11,6 +11,8 @@ export interface AppSettings {
   fontFamily: string;
   showORP: boolean;
   orpColor: string;
+  dialogueColor: string;
+  unfamiliarColor: string;
   autoBookmark: boolean;
   customKnownWords: string[];
 }
@@ -23,6 +25,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   fontFamily: 'system-ui, -apple-system, sans-serif',
   showORP: true,
   orpColor: '#ef4444',
+  dialogueColor: '#60a5fa',
+  unfamiliarColor: '#fbbf24',
   autoBookmark: true,
   customKnownWords: [],
 };

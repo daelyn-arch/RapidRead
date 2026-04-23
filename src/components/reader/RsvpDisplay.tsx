@@ -6,21 +6,14 @@ interface Props {
   onTapToggle?: () => void;
 }
 
-// Context-based word colors
-const CONTEXT_COLORS = {
-  dialogue: '#60a5fa',     // blue for dialogue
-  unfamiliar: '#fbbf24',   // amber for unfamiliar/fictional words
-  normal: 'var(--text-primary)',
-};
-
-function getWordColor(token: WordToken): string {
-  if (token.context.isDialogue) return CONTEXT_COLORS.dialogue;
-  if (token.context.isUnfamiliar) return CONTEXT_COLORS.unfamiliar;
-  return CONTEXT_COLORS.normal;
-}
-
 export default function RsvpDisplay({ token, onTapToggle }: Props) {
-  const { fontSize, showORP, orpColor, fontFamily } = useSettingsStore(s => s.settings);
+  const { fontSize, showORP, orpColor, dialogueColor, unfamiliarColor, fontFamily } = useSettingsStore(s => s.settings);
+
+  const getWordColor = (t: WordToken): string => {
+    if (t.context.isDialogue) return dialogueColor;
+    if (t.context.isUnfamiliar) return unfamiliarColor;
+    return 'var(--text-primary)';
+  };
 
   if (!token) {
     return (

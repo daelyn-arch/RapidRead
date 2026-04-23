@@ -15,6 +15,9 @@ interface SettingsState {
   setRuleWpm: (profileId: string, ruleId: string, wpm: number) => void;
   setTheme: (theme: Theme) => void;
   setFontSize: (size: number) => void;
+  setOrpColor: (color: string) => void;
+  setDialogueColor: (color: string) => void;
+  setUnfamiliarColor: (color: string) => void;
   addKnownWord: (word: string) => void;
   removeKnownWord: (word: string) => void;
   addProfile: (profile: SpeedProfile) => void;
@@ -95,6 +98,18 @@ export const useSettingsStore = create<SettingsState>()(
         settings: { ...state.settings, fontSize: Math.max(1.5, Math.min(6, size)) },
       })),
 
+      setOrpColor: (color: string) => set(state => ({
+        settings: { ...state.settings, orpColor: color },
+      })),
+
+      setDialogueColor: (color: string) => set(state => ({
+        settings: { ...state.settings, dialogueColor: color },
+      })),
+
+      setUnfamiliarColor: (color: string) => set(state => ({
+        settings: { ...state.settings, unfamiliarColor: color },
+      })),
+
       addKnownWord: (word: string) => set(state => {
         const lower = word.toLowerCase().trim();
         if (state.settings.customKnownWords.includes(lower)) return state;
@@ -144,6 +159,10 @@ export const useSettingsStore = create<SettingsState>()(
       version: 1,
       migrate: (persisted: unknown) => {
         const state = persisted as { settings?: AppSettings };
+        if (state?.settings) {
+          if (state.settings.dialogueColor === undefined) state.settings.dialogueColor = '#60a5fa';
+          if (state.settings.unfamiliarColor === undefined) state.settings.unfamiliarColor = '#fbbf24';
+        }
         if (state?.settings?.profiles) {
           for (const profile of state.settings.profiles) {
             // Migrate old modifier-based rules to wpm-based

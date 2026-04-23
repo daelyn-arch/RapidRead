@@ -55,6 +55,8 @@ export default function PlaybackControls({ isPlaying, onToggle }: Props) {
   const profile = useSettingsStore(s => s.getActiveProfile)();
   const setBaseWpm = useSettingsStore(s => s.setBaseWpm);
   const setRuleWpm = useSettingsStore(s => s.setRuleWpm);
+  const dialogueColor = useSettingsStore(s => s.settings.dialogueColor);
+  const unfamiliarColor = useSettingsStore(s => s.settings.unfamiliarColor);
 
   const dialogueRule = profile.rules.find(r => r.id === 'dialogue');
   const unfamiliarRule = profile.rules.find(r => r.id === 'unfamiliar');
@@ -72,7 +74,7 @@ export default function PlaybackControls({ isPlaying, onToggle }: Props) {
             onDec={() => setRuleWpm(profile.id, dialogueRule.id, dialogueRule.wpm - 25)}
             onInc={() => setRuleWpm(profile.id, dialogueRule.id, dialogueRule.wpm + 25)}
             disabled={!dialogueRule.enabled}
-            labelColor="#60a5fa"
+            labelColor={dialogueColor}
           />
         )}
         <WpmStepper
@@ -88,7 +90,7 @@ export default function PlaybackControls({ isPlaying, onToggle }: Props) {
             onDec={() => setRuleWpm(profile.id, unfamiliarRule.id, unfamiliarRule.wpm - 25)}
             onInc={() => setRuleWpm(profile.id, unfamiliarRule.id, unfamiliarRule.wpm + 25)}
             disabled={!unfamiliarRule.enabled}
-            labelColor="#fbbf24"
+            labelColor={unfamiliarColor}
           />
         )}
       </div>

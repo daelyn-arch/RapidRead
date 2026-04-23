@@ -10,10 +10,59 @@ const THEMES: { value: Theme; label: string }[] = [
   { value: 'sepia', label: 'Sepia' },
 ];
 
+const COLOR_PALETTE = [
+  '#ef4444', '#f97316', '#f59e0b', '#eab308',
+  '#84cc16', '#22c55e', '#10b981', '#14b8a6',
+  '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
+  '#8b5cf6', '#a855f7', '#ec4899', '#f43f5e',
+];
+
+interface ColorGridProps {
+  label: string;
+  value: string;
+  onChange: (color: string) => void;
+  disabled?: boolean;
+}
+
+function ColorGrid({ label, value, onChange, disabled }: ColorGridProps) {
+  return (
+    <div
+      className="py-3 px-4 rounded-lg"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        opacity: disabled ? 0.5 : 1,
+        pointerEvents: disabled ? 'none' : 'auto',
+      }}
+    >
+      <div className="text-sm mb-3" style={{ color: 'var(--text-primary)' }}>
+        {label}
+      </div>
+      <div className="grid grid-cols-8 gap-2">
+        {COLOR_PALETTE.map(color => {
+          const selected = color.toLowerCase() === value.toLowerCase();
+          return (
+            <button
+              key={color}
+              onClick={() => onChange(color)}
+              aria-label={`Set color to ${color}`}
+              className="aspect-square rounded-md transition-transform hover:scale-110"
+              style={{
+                backgroundColor: color,
+                outline: selected ? `2px solid var(--text-primary)` : 'none',
+                outlineOffset: selected ? '2px' : '0',
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { theme, fontSize, fontFamily, showORP } = useSettingsStore(s => s.settings);
-  const { setTheme, setFontSize } = useSettingsStore();
+  const { theme, fontSize, fontFamily, showORP, orpColor, dialogueColor, unfamiliarColor } = useSettingsStore(s => s.settings);
+  const { setTheme, setFontSize, setOrpColor, setDialogueColor, setUnfamiliarColor } = useSettingsStore();
   const toggleORP = () => useSettingsStore.setState(s => ({ settings: { ...s.settings, showORP: !s.settings.showORP } }));
 
   return (
@@ -125,7 +174,7 @@ export default function SettingsPage() {
                     lineHeight: 1.1,
                   }}
                 >
-                  Read<span style={{ color: 'var(--orp-color)', fontWeight: 700 }}>i</span>ng
+                  Read<span style={{ color: showORP ? orpColor : 'var(--text-primary)', fontWeight: showORP ? 700 : 400 }}>i</span>ng
                 </span>
               </div>
             </div>
@@ -152,6 +201,23 @@ export default function SettingsPage() {
                 />
               </button>
             </div>
+
+            <ColorGrid
+              label="ORP Highlight Color"
+              value={orpColor}
+              onChange={setOrpColor}
+              disabled={!showORP}
+            />
+            <ColorGrid
+              label="Dialogue Color"
+              value={dialogueColor}
+              onChange={setDialogueColor}
+            />
+            <ColorGrid
+              label="Unfamiliar Words Color"
+              value={unfamiliarColor}
+              onChange={setUnfamiliarColor}
+            />
           </div>
         </div>
 
