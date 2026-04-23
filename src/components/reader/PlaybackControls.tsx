@@ -1,51 +1,23 @@
 import { useSettingsStore } from '@/store/settingsStore';
+import { useReaderStore } from '@/store/readerStore';
 
 interface Props {
   isPlaying: boolean;
   onToggle: () => void;
-  onSkipBack: (count?: number) => void;
-  onSkipForward: (count?: number) => void;
 }
 
-export default function PlaybackControls({
-  isPlaying,
-  onToggle,
-  onSkipBack,
-  onSkipForward,
-}: Props) {
+export default function PlaybackControls({ isPlaying, onToggle }: Props) {
   const profile = useSettingsStore(s => s.getActiveProfile)();
   const setBaseWpm = useSettingsStore(s => s.setBaseWpm);
+  const effectiveWpm = useReaderStore(s => s.effectiveWpm);
+
+  const showEffective = isPlaying && effectiveWpm > 0 && Math.abs(effectiveWpm - profile.baseWpm) > 5;
 
   return (
     <div
       className="flex items-center justify-center gap-4 py-4"
       style={{ color: 'var(--text-primary)' }}
     >
-      {/* Skip back */}
-      <button
-        onClick={() => onSkipBack(10)}
-        className="p-2 rounded-lg hover:opacity-80 transition-opacity"
-        style={{ backgroundColor: 'var(--bg-tertiary)' }}
-        title="Skip back 10 words"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="11 17 6 12 11 7" />
-          <polyline points="18 17 13 12 18 7" />
-        </svg>
-      </button>
-
-      {/* Skip back 1 */}
-      <button
-        onClick={() => onSkipBack(1)}
-        className="p-2 rounded-lg hover:opacity-80 transition-opacity"
-        style={{ backgroundColor: 'var(--bg-tertiary)' }}
-        title="Skip back 1 word"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-
       {/* Play/Pause */}
       <button
         onClick={onToggle}
@@ -65,31 +37,6 @@ export default function PlaybackControls({
         )}
       </button>
 
-      {/* Skip forward 1 */}
-      <button
-        onClick={() => onSkipForward(1)}
-        className="p-2 rounded-lg hover:opacity-80 transition-opacity"
-        style={{ backgroundColor: 'var(--bg-tertiary)' }}
-        title="Skip forward 1 word"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </button>
-
-      {/* Skip forward 10 */}
-      <button
-        onClick={() => onSkipForward(10)}
-        className="p-2 rounded-lg hover:opacity-80 transition-opacity"
-        style={{ backgroundColor: 'var(--bg-tertiary)' }}
-        title="Skip forward 10 words"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="13 17 18 12 13 7" />
-          <polyline points="6 17 11 12 6 7" />
-        </svg>
-      </button>
-
       {/* Speed control */}
       <div className="flex items-center gap-2 ml-4">
         <button
@@ -100,9 +47,19 @@ export default function PlaybackControls({
         >
           -
         </button>
-        <span className="text-sm font-mono w-20 text-center">
-          {profile.baseWpm} WPM
-        </span>
+        <div className="text-center w-24">
+          <div className="text-sm font-mono">
+            {profile.baseWpm} WPM
+          </div>
+          {showEffective && (
+            <div
+              className="text-[10px] font-mono"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              {Math.round(effectiveWpm)} actual
+            </div>
+          )}
+        </div>
         <button
           onClick={() => setBaseWpm(profile.baseWpm + 25)}
           className="w-8 h-8 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity text-lg font-bold"

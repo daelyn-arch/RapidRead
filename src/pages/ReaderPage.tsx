@@ -299,8 +299,6 @@ export default function ReaderPage() {
         <PlaybackControls
           isPlaying={isPlaying}
           onToggle={playback.toggle}
-          onSkipBack={playback.skipBack}
-          onSkipForward={playback.skipForward}
         />
         <ProgressBar
           current={currentTokenIndex}

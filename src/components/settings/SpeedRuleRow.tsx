@@ -3,14 +3,10 @@ import type { SpeedRule } from '@/types/rsvp';
 interface Props {
   rule: SpeedRule;
   onToggle: () => void;
-  onModifierChange: (modifier: number) => void;
+  onWpmChange: (wpm: number) => void;
 }
 
-export default function SpeedRuleRow({ rule, onToggle, onModifierChange }: Props) {
-  const effectDescription = rule.modifier < 1
-    ? `${Math.round((1 / rule.modifier - 1) * 100)}% slower`
-    : `${Math.round((rule.modifier - 1) * 100)}% faster`;
-
+export default function SpeedRuleRow({ rule, onToggle, onWpmChange }: Props) {
   return (
     <div
       className="flex items-center justify-between py-3 px-4 rounded-lg"
@@ -31,33 +27,34 @@ export default function SpeedRuleRow({ rule, onToggle, onModifierChange }: Props
             }}
           />
         </button>
-        <div>
-          <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-            {rule.name}
-          </div>
-          <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            {effectDescription}
-          </div>
+        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+          {rule.name}
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <input
-          type="range"
-          min="0.1"
-          max="1.5"
-          step="0.05"
-          value={rule.modifier}
-          onChange={e => onModifierChange(parseFloat(e.target.value))}
-          className="w-24 accent-blue-500"
+        <button
+          onClick={() => onWpmChange(rule.wpm - 25)}
           disabled={!rule.enabled}
-        />
-        <span
-          className="text-xs font-mono w-10 text-right"
-          style={{ color: 'var(--text-secondary)' }}
+          className="w-7 h-7 rounded-md flex items-center justify-center font-bold text-sm disabled:opacity-30"
+          style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
         >
-          {rule.modifier.toFixed(2)}x
+          -
+        </button>
+        <span
+          className="text-sm font-mono w-16 text-center"
+          style={{ color: rule.enabled ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+        >
+          {rule.wpm} WPM
         </span>
+        <button
+          onClick={() => onWpmChange(rule.wpm + 25)}
+          disabled={!rule.enabled}
+          className="w-7 h-7 rounded-md flex items-center justify-center font-bold text-sm disabled:opacity-30"
+          style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+        >
+          +
+        </button>
       </div>
     </div>
   );

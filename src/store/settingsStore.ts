@@ -9,8 +9,10 @@ interface SettingsState {
   settings: AppSettings;
   getActiveProfile: () => SpeedProfile;
   setBaseWpm: (wpm: number) => void;
+  setTransitionDuration: (seconds: number) => void;
   updateRule: (profileId: string, ruleId: string, updates: Partial<SpeedRule>) => void;
   toggleRule: (profileId: string, ruleId: string) => void;
+  setRuleWpm: (profileId: string, ruleId: string, wpm: number) => void;
   setTheme: (theme: Theme) => void;
   setFontSize: (size: number) => void;
   addKnownWord: (word: string) => void;
@@ -41,6 +43,17 @@ export const useSettingsStore = create<SettingsState>()(
         },
       })),
 
+      setTransitionDuration: (seconds: number) => set(state => ({
+        settings: {
+          ...state.settings,
+          profiles: state.settings.profiles.map(p =>
+            p.id === state.settings.activeProfileId
+              ? { ...p, transitionDuration: Math.max(0, Math.min(10, seconds)) }
+              : p
+          ),
+        },
+      })),
+
       updateRule: (profileId: string, ruleId: string, updates: Partial<SpeedRule>) => set(state => ({
         settings: {
           ...state.settings,
@@ -58,6 +71,17 @@ export const useSettingsStore = create<SettingsState>()(
           profiles: state.settings.profiles.map(p =>
             p.id === profileId
               ? { ...p, rules: p.rules.map(r => r.id === ruleId ? { ...r, enabled: !r.enabled } : r) }
+              : p
+          ),
+        },
+      })),
+
+      setRuleWpm: (profileId: string, ruleId: string, wpm: number) => set(state => ({
+        settings: {
+          ...state.settings,
+          profiles: state.settings.profiles.map(p =>
+            p.id === profileId
+              ? { ...p, rules: p.rules.map(r => r.id === ruleId ? { ...r, wpm: Math.max(25, Math.min(1500, wpm)) } : r) }
               : p
           ),
         },
@@ -115,6 +139,28 @@ export const useSettingsStore = create<SettingsState>()(
         settings: { ...state.settings, activeProfileId: id },
       })),
     }),
-    { name: 'rapidread-settings' },
+    {
+      name: 'rapidread-settings',
+      version: 1,
+      migrate: (persisted: unknown) => {
+        const state = persisted as { settings?: AppSettings };
+        if (state?.settings?.profiles) {
+          for (const profile of state.settings.profiles) {
+            // Migrate old modifier-based rules to wpm-based
+            if (profile.transitionDuration === undefined) {
+              profile.transitionDuration = 0;
+            }
+            for (const rule of profile.rules) {
+              if ((rule as unknown as { modifier?: number }).modifier !== undefined && rule.wpm === undefined) {
+                const mod = (rule as unknown as { modifier: number }).modifier;
+                rule.wpm = Math.round(profile.baseWpm * mod);
+                delete (rule as unknown as { modifier?: number }).modifier;
+              }
+            }
+          }
+        }
+        return state;
+      },
+    },
   ),
 );

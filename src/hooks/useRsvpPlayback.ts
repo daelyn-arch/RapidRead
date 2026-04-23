@@ -20,8 +20,8 @@ export function useRsvpPlayback() {
   useEffect(() => {
     const profile = getActiveProfile();
     const controller = new PlaybackController(profile, {
-      onWord: (token: WordToken, index: number) => {
-        setCurrentToken(token, index);
+      onWord: (token: WordToken, index: number, effectiveWpm: number) => {
+        setCurrentToken(token, index, effectiveWpm);
       },
       onComplete: () => {
         setPlaying(false);

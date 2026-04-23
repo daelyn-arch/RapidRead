@@ -9,7 +9,7 @@ test('library page loads with title and import area', async ({ page }) => {
 test('settings page loads and has speed controls', async ({ page }) => {
   await page.goto('/#/settings');
   await expect(page.getByText('Settings')).toBeVisible();
-  await expect(page.getByText('Base Speed')).toBeVisible();
+  await expect(page.getByText('Base Speed', { exact: true })).toBeVisible();
   await expect(page.getByText('300 WPM')).toBeVisible();
 });
 
@@ -18,7 +18,7 @@ test('can change WPM in settings', async ({ page }) => {
   await expect(page.getByText('300 WPM')).toBeVisible();
 
   // Click the + button next to the WPM display
-  const wpmSection = page.locator('text=Base Speed').locator('..');
+  const wpmSection = page.getByText('Base Speed', { exact: true }).locator('..');
   await wpmSection.getByRole('button', { name: '+' }).click();
   await expect(page.getByText('325 WPM')).toBeVisible();
 });
@@ -26,7 +26,7 @@ test('can change WPM in settings', async ({ page }) => {
 test('can navigate to settings and back', async ({ page }) => {
   await page.goto('/');
   await page.getByTitle('Settings').click();
-  await expect(page.getByText('Base Speed')).toBeVisible();
+  await expect(page.getByText('Base Speed', { exact: true })).toBeVisible();
 
   // Go back
   await page.locator('a[href], button').filter({ hasText: /^$/ }).first().click();

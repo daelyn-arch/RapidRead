@@ -1,22 +1,29 @@
 import type { WordToken, SpeedProfile } from '@/types/rsvp';
 
 /**
- * Calculate the display delay in ms for a given word token based on the speed profile.
- * Lower modifier = slower display = longer delay.
- * When multiple rules match, the slowest one wins (smallest modifier → largest delay).
+ * Get the target WPM for a word based on matching rules.
+ * When multiple rules match, the slowest one wins (lowest WPM).
+ * Returns null if no rules match (use base WPM).
  */
-export function calculateDelay(token: WordToken, profile: SpeedProfile): number {
-  const baseDelay = 60000 / profile.baseWpm;
-
-  let slowestModifier = 1.0;
+export function getRuleWpm(token: WordToken, profile: SpeedProfile): number | null {
+  let slowest: number | null = null;
 
   for (const rule of profile.rules) {
     if (rule.enabled && token.context[rule.condition]) {
-      slowestModifier = Math.min(slowestModifier, rule.modifier);
+      if (slowest === null || rule.wpm < slowest) {
+        slowest = rule.wpm;
+      }
     }
   }
 
-  return baseDelay / slowestModifier;
+  return slowest;
+}
+
+/**
+ * Calculate the display delay in ms for a given effective WPM.
+ */
+export function wpmToDelay(wpm: number): number {
+  return 60000 / Math.max(wpm, 1);
 }
 
 /**
