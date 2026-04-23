@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReaderStore } from '@/store/readerStore';
 import { useLibraryStore } from '@/store/libraryStore';
@@ -12,7 +12,10 @@ import RsvpDisplay from '@/components/reader/RsvpDisplay';
 import PlaybackControls from '@/components/reader/PlaybackControls';
 import ProgressBar from '@/components/reader/ProgressBar';
 import ChapterNav from '@/components/reader/ChapterNav';
+import PageView from '@/components/reader/PageView';
 import type { Chapter } from '@/types/book';
+
+type ViewMode = 'rsvp' | 'page';
 
 export default function ReaderPage() {
   const { bookId } = useParams<{ bookId: string }>();
@@ -21,6 +24,7 @@ export default function ReaderPage() {
   const [loading, setLoading] = useState(true);
   const [showChapterNav, setShowChapterNav] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('rsvp');
 
   const { currentToken, currentTokenIndex, isPlaying, currentChapterIndex, tokens } = useReaderStore();
   const setBook = useReaderStore(s => s.setBook);
@@ -29,16 +33,50 @@ export default function ReaderPage() {
 
   const books = useLibraryStore(s => s.books);
   const getProgress = useLibraryStore(s => s.getProgress);
-  const customKnownWords = useSettingsStore(s => s.settings.customKnownWords);
+  const updateProgress = useLibraryStore(s => s.updateProgress);
   const setBaseWpm = useSettingsStore(s => s.setBaseWpm);
   const getActiveProfile = useSettingsStore(s => s.getActiveProfile);
   const theme = useSettingsStore(s => s.settings.theme);
 
   const playback = useRsvpPlayback();
+  const savedPositionRef = useRef(0);
 
   const bookMeta = books.find(b => b.id === bookId);
 
-  // Load book and dictionary — only re-run when bookId changes
+  // Save progress helper
+  const saveProgress = useCallback(() => {
+    if (!bookId || tokens.length === 0) return;
+    const pos = savedPositionRef.current;
+    const token = tokens[pos];
+    if (token) {
+      updateProgress(bookId, {
+        chapterIndex: currentChapterIndex,
+        wordIndex: pos,
+        globalWordIndex: token.globalIndex,
+      });
+    }
+  }, [bookId, currentChapterIndex, tokens, updateProgress]);
+
+  // Track current position for saving
+  useEffect(() => {
+    savedPositionRef.current = currentTokenIndex;
+  }, [currentTokenIndex]);
+
+  // Save progress when leaving the page
+  useEffect(() => {
+    return () => { saveProgress(); };
+  }, [saveProgress]);
+
+  // Save progress on visibility change (tab switch, minimize)
+  useEffect(() => {
+    const handler = () => {
+      if (document.hidden) saveProgress();
+    };
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
+  }, [saveProgress]);
+
+  // Load book and dictionary
   useEffect(() => {
     if (!bookId) return;
     let cancelled = false;
@@ -54,6 +92,7 @@ export default function ReaderPage() {
           setChapters(content);
           const progress = getProgress(bookId);
           const startChapter = progress?.chapterIndex ?? 0;
+          const startWord = progress?.wordIndex ?? 0;
           setChapter(startChapter);
 
           const dictionary = getDictionary();
@@ -65,6 +104,12 @@ export default function ReaderPage() {
             words,
           );
           setTokens(chapterTokens);
+
+          // Resume from saved word position
+          if (startWord > 0) {
+            // Small delay to let playback controller load tokens first
+            setTimeout(() => playback.seekTo(startWord), 50);
+          }
         }
       } catch (err) {
         console.error('Failed to load book:', err);
@@ -79,26 +124,42 @@ export default function ReaderPage() {
 
   const loadChapter = useCallback((index: number) => {
     if (index < 0 || index >= chapters.length) return;
+    saveProgress();
     setChapter(index);
     const dictionary = getDictionary();
+    const words = useSettingsStore.getState().settings.customKnownWords;
     const chapterTokens = tokenize(
       chapters[index].rawText,
       chapters[index].startWordIndex,
       dictionary,
-      customKnownWords,
+      words,
     );
     setTokens(chapterTokens);
-  }, [chapters, setChapter, setTokens, customKnownWords]);
+  }, [chapters, setChapter, setTokens, saveProgress]);
 
-  // Auto-hide controls during playback
+  // Auto-hide controls during RSVP playback
   useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying || viewMode === 'page') {
       setControlsVisible(true);
       return;
     }
     const timer = setTimeout(() => setControlsVisible(false), 3000);
     return () => clearTimeout(timer);
-  }, [isPlaying, currentTokenIndex]);
+  }, [isPlaying, currentTokenIndex, viewMode]);
+
+  // Pause RSVP when switching to page view
+  const toggleView = useCallback(() => {
+    if (viewMode === 'rsvp') {
+      playback.pause();
+      setViewMode('page');
+    } else {
+      setViewMode('rsvp');
+    }
+  }, [viewMode, playback]);
+
+  const handleWordClick = useCallback((index: number) => {
+    playback.seekTo(index);
+  }, [playback]);
 
   const keyboardActions = useMemo(() => ({
     toggle: playback.toggle,
@@ -115,7 +176,8 @@ export default function ReaderPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" data-theme={theme}>
+      <div className="flex items-center justify-center min-h-screen" data-theme={theme}
+        style={{ backgroundColor: 'var(--bg-primary)' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Loading book...</p>
       </div>
     );
@@ -123,7 +185,8 @@ export default function ReaderPage() {
 
   if (!bookMeta || chapters.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4" data-theme={theme}>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4" data-theme={theme}
+        style={{ backgroundColor: 'var(--bg-primary)' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Book not found</p>
         <button onClick={() => navigate('/')} style={{ color: 'var(--accent)' }}>
           Back to Library
@@ -137,11 +200,11 @@ export default function ReaderPage() {
       className="flex flex-col min-h-screen"
       data-theme={theme}
       style={{ backgroundColor: 'var(--bg-primary)' }}
-      onClick={() => setControlsVisible(true)}
+      onClick={() => viewMode === 'rsvp' && setControlsVisible(true)}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 transition-opacity duration-300"
+        className="flex items-center justify-between px-4 py-3 shrink-0 transition-opacity duration-300"
         style={{
           opacity: controlsVisible ? 1 : 0,
           pointerEvents: controlsVisible ? 'auto' : 'none',
@@ -149,7 +212,7 @@ export default function ReaderPage() {
         }}
       >
         <button
-          onClick={() => navigate('/')}
+          onClick={() => { saveProgress(); navigate('/'); }}
           className="flex items-center gap-2 hover:opacity-80"
           style={{ color: 'var(--accent)' }}
         >
@@ -160,6 +223,30 @@ export default function ReaderPage() {
         </button>
 
         <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <button
+            onClick={toggleView}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity text-sm"
+            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+            title={viewMode === 'rsvp' ? 'Switch to Page View' : 'Switch to RSVP View'}
+          >
+            {viewMode === 'rsvp' ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="7" y1="8" x2="17" y2="8" />
+                <line x1="7" y1="12" x2="17" y2="12" />
+                <line x1="7" y1="16" x2="13" y2="16" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="9" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+            )}
+            {viewMode === 'rsvp' ? 'Page' : 'RSVP'}
+          </button>
+
+          {/* Contents */}
           <button
             onClick={() => setShowChapterNav(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity text-sm"
@@ -174,8 +261,9 @@ export default function ReaderPage() {
             Contents
           </button>
 
+          {/* Settings */}
           <button
-            onClick={() => navigate('/settings')}
+            onClick={() => { saveProgress(); navigate('/settings'); }}
             className="p-2 rounded-lg hover:opacity-80 transition-opacity"
             style={{ color: 'var(--text-secondary)' }}
             title="Settings"
@@ -188,12 +276,20 @@ export default function ReaderPage() {
         </div>
       </div>
 
-      {/* RSVP Display */}
-      <RsvpDisplay token={currentToken} />
+      {/* Main content area */}
+      {viewMode === 'rsvp' ? (
+        <RsvpDisplay token={currentToken} />
+      ) : (
+        <PageView
+          tokens={tokens}
+          currentIndex={currentTokenIndex}
+          onWordClick={handleWordClick}
+        />
+      )}
 
-      {/* Controls */}
+      {/* Controls — always visible in page view, auto-hide in RSVP */}
       <div
-        className="transition-opacity duration-300"
+        className="shrink-0 transition-opacity duration-300"
         style={{
           opacity: controlsVisible ? 1 : 0,
           pointerEvents: controlsVisible ? 'auto' : 'none',
