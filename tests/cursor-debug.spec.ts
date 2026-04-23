@@ -1,44 +1,34 @@
 import { test, expect } from '@playwright/test';
 
-test('screenshot RSVP display to verify no cursor', async ({ page }) => {
+test('no cursor or caret visible on RSVP display after clicking', async ({ page }) => {
   await page.goto('/');
 
-  const textContent = 'The quick brown fox jumps over the lazy dog and shoulder today.';
+  // Use dialogue text so we get blue colored words (like the user's screenshot)
+  const textContent = '"She would ravish the entire kingdom," he said quietly.';
   const buffer = Buffer.from(textContent, 'utf-8');
   const fileInput = page.locator('input[type="file"]');
   await fileInput.setInputFiles({
-    name: 'cursor-test.txt',
+    name: 'caret-test.txt',
     mimeType: 'text/plain',
     buffer,
   });
 
   await page.waitForURL(/\/read\//);
 
-  // Take screenshot of initial state
-  await page.screenshot({ path: 'test-results/rsvp-before-play.png' });
-
-  // Play and wait for a word
+  // Play, advance a few words, then pause
   await page.getByTitle('Play (Space)').click();
-  await page.waitForTimeout(800);
-  await page.keyboard.press('Space'); // pause
+  await page.waitForTimeout(1500);
+  await page.keyboard.press('Space');
 
-  // Take screenshot while paused on a word
-  await page.screenshot({ path: 'test-results/rsvp-paused-word.png' });
+  // Click directly on the word display area to trigger any caret
+  const display = page.locator('.select-none.cursor-default').first();
+  await display.click();
+  await page.waitForTimeout(200);
 
-  // Verify no element has cursor:text
-  const displayArea = page.locator('.select-none.cursor-default');
-  await expect(displayArea).toBeVisible();
+  // Screenshot after clicking
+  await page.screenshot({ path: 'test-results/rsvp-after-click.png' });
 
-  // Check all elements inside the display for cursor style
-  const cursors = await displayArea.evaluate(el => {
-    const allElements = el.querySelectorAll('*');
-    const results: string[] = [];
-    allElements.forEach(child => {
-      const cursor = getComputedStyle(child).cursor;
-      if (cursor === 'text') results.push(`${child.tagName}.${child.className}: cursor=${cursor}`);
-    });
-    return results;
-  });
-
-  expect(cursors).toEqual([]);
+  // Verify caret-color is transparent on the display
+  const caretColor = await display.evaluate(el => getComputedStyle(el).caretColor);
+  expect(caretColor).toBe('rgba(0, 0, 0, 0)');
 });

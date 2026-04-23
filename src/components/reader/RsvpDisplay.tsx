@@ -41,12 +41,15 @@ export default function RsvpDisplay({ token }: Props) {
   const wordColor = getWordColor(token);
 
   return (
-    <div className="flex items-center justify-center flex-1 select-none cursor-default">
+    <div
+      className="flex items-center justify-center flex-1 select-none cursor-default"
+      style={{ caretColor: 'transparent' }}
+    >
       <div className="relative w-full max-w-2xl px-4">
         {/* Word display — ORP char pinned to center */}
         <div
           className="relative whitespace-nowrap"
-          style={{ fontSize: `${fontSize}rem`, fontFamily }}
+          style={{ fontSize: `${fontSize}rem`, fontFamily, caretColor: 'transparent' }}
         >
           {/* Before ORP: right-aligned, ending at center */}
           <span
