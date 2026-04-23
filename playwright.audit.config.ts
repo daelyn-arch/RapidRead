@@ -1,4 +1,9 @@
 import { defineConfig } from '@playwright/test';
+import dotenv from 'dotenv';
+
+// Load .env.local so the audit can use SUPABASE_SERVICE_ROLE_KEY to
+// pre-confirm test users without needing a real inbox.
+dotenv.config({ path: '.env.local' });
 
 /**
  * Separate config for the production audit. Targets the live Vercel URL, no

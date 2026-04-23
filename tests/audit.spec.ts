@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
+import { createConfirmedUser, deleteUserById } from './helpers/supabaseAdmin';
 
 const OUT_DIR = path.join(process.cwd(), 'test-results', 'audit');
 fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -10,7 +11,6 @@ async function shot(page: Page, name: string) {
   await page.screenshot({ path: file, fullPage: true });
 }
 
-// Email confirmation is OFF in Supabase so any syntactically-valid email works.
 function randomEmail() {
   const rand = Math.random().toString(36).slice(2, 8);
   return `audit-${Date.now()}-${rand}@rapidread.app`;
@@ -74,20 +74,40 @@ test.describe('RapidRead production audit', () => {
     await shot(page, '04b-signup-mode');
   });
 
-  // ───── Full authenticated user flow (in one test so session persists) ─────
+  // ───── Signup UI lands on "Check your email" ─────
 
-  test('5. Signed-in user flow: signup → library → book → reader → settings → upgrade', async ({ page }) => {
+  test('5a. Signup via UI shows Check your email screen (email confirm ON)', async ({ page }) => {
     const email = randomEmail();
     const password = 'SmokeTest1!RR';
 
-    // Signup
     await page.goto('/signup');
     await page.locator('input[type="email"]').fill(email);
     await page.locator('input[type="password"]').fill(password);
     await page.getByRole('button', { name: 'Create account' }).click();
-    await page.waitForURL(/\/app(\?|$|\/)/, { timeout: 15_000 });
-    await shot(page, '05-app-fresh-signup');
-    await expect(page.getByText(/Drop \.epub or \.txt/i)).toBeVisible();
+
+    await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(email)).toBeVisible();
+    await shot(page, '05a-check-your-email');
+  });
+
+  // ───── Full authenticated user flow (use admin API to pre-confirm) ─────
+
+  test('5b. Signed-in user flow: library → book → reader → settings → upgrade', async ({ page }) => {
+    const email = randomEmail();
+    const password = 'SmokeTest1!RR';
+
+    // Bypass email verification by creating the user confirmed via admin API.
+    const user = await createConfirmedUser(email, password);
+
+    try {
+      // Sign in via the UI
+      await page.goto('/login');
+      await page.locator('input[type="email"]').fill(email);
+      await page.locator('input[type="password"]').fill(password);
+      await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+      await page.waitForURL(/\/app(\?|$|\/)/, { timeout: 15_000 });
+      await shot(page, '05b-app-signed-in');
+      await expect(page.getByText(/Drop \.epub or \.txt/i)).toBeVisible();
 
     // Account page shows Free plan
     await page.goto('/app/account');
@@ -165,5 +185,9 @@ test.describe('RapidRead production audit', () => {
     await page.getByRole('button', { name: 'Upgrade to Pro' }).click();
     await expect.poll(() => checkoutURL, { timeout: 10_000 }).toMatch(/^https:\/\/checkout\.stripe\.com\//);
     await shot(page, '12-checkout-redirecting');
+    } finally {
+      // Clean up the test user so reruns don't accumulate noise in auth.users.
+      await deleteUserById(user.id);
+    }
   });
 });
