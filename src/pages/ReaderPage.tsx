@@ -204,7 +204,7 @@ export default function ReaderPage() {
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 shrink-0 transition-opacity duration-300 sticky top-0 z-40"
+        className="safe-top flex items-center justify-between px-4 py-3 shrink-0 transition-opacity duration-300 sticky top-0 z-40"
         style={{
           opacity: controlsVisible ? 1 : 0,
           pointerEvents: controlsVisible ? 'auto' : 'none',
@@ -279,7 +279,7 @@ export default function ReaderPage() {
 
       {/* Main content area */}
       {viewMode === 'rsvp' ? (
-        <RsvpDisplay token={currentToken} />
+        <RsvpDisplay token={currentToken} onTapToggle={playback.toggle} />
       ) : (
         <PageView
           tokens={tokens}
@@ -290,7 +290,7 @@ export default function ReaderPage() {
 
       {/* Controls — always visible in page view, auto-hide in RSVP */}
       <div
-        className="shrink-0 transition-opacity duration-300"
+        className="safe-bottom shrink-0 transition-opacity duration-300"
         style={{
           opacity: controlsVisible ? 1 : 0,
           pointerEvents: controlsVisible ? 'auto' : 'none',

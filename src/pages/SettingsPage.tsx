@@ -12,7 +12,7 @@ const THEMES: { value: Theme; label: string }[] = [
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { theme, fontSize, showORP } = useSettingsStore(s => s.settings);
+  const { theme, fontSize, fontFamily, showORP } = useSettingsStore(s => s.settings);
   const { setTheme, setFontSize } = useSettingsStore();
   const toggleORP = () => useSettingsStore.setState(s => ({ settings: { ...s.settings, showORP: !s.settings.showORP } }));
 
@@ -81,30 +81,52 @@ export default function SettingsPage() {
           </h3>
           <div className="space-y-3">
             <div
-              className="flex items-center justify-between py-3 px-4 rounded-lg"
+              className="py-3 px-4 rounded-lg"
               style={{ backgroundColor: 'var(--bg-secondary)' }}
             >
-              <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                Font Size
-              </span>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setFontSize(fontSize - 0.5)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
-                  style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
-                >
-                  -
-                </button>
-                <span className="font-mono w-12 text-center text-sm" style={{ color: 'var(--text-primary)' }}>
-                  {fontSize}rem
+              <div className="flex items-center justify-between">
+                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                  Font Size
                 </span>
-                <button
-                  onClick={() => setFontSize(fontSize + 0.5)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
-                  style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setFontSize(fontSize - 0.5)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                  >
+                    -
+                  </button>
+                  <span className="font-mono w-12 text-center text-sm" style={{ color: 'var(--text-primary)' }}>
+                    {fontSize.toFixed(1)}rem
+                  </span>
+                  <button
+                    onClick={() => setFontSize(fontSize + 0.5)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div
+                className="mt-3 rounded-md flex items-center justify-center overflow-hidden"
+                style={{
+                  backgroundColor: 'var(--bg-primary)',
+                  minHeight: `${fontSize * 2.4}rem`,
+                  padding: '0.75rem',
+                }}
+              >
+                <span
+                  className="no-select"
+                  style={{
+                    fontSize: `${fontSize}rem`,
+                    fontFamily,
+                    color: 'var(--text-primary)',
+                    lineHeight: 1.1,
+                  }}
                 >
-                  +
-                </button>
+                  Read<span style={{ color: 'var(--orp-color)', fontWeight: 700 }}>i</span>ng
+                </span>
               </div>
             </div>
 

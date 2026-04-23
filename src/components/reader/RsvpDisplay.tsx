@@ -3,6 +3,7 @@ import type { WordToken } from '@/types/rsvp';
 
 interface Props {
   token: WordToken | null;
+  onTapToggle?: () => void;
 }
 
 // Context-based word colors
@@ -18,19 +19,24 @@ function getWordColor(token: WordToken): string {
   return CONTEXT_COLORS.normal;
 }
 
-export default function RsvpDisplay({ token }: Props) {
+export default function RsvpDisplay({ token, onTapToggle }: Props) {
   const { fontSize, showORP, orpColor, fontFamily } = useSettingsStore(s => s.settings);
 
   if (!token) {
     return (
-      <div className="flex items-center justify-center flex-1 cursor-default">
+      <button
+        type="button"
+        onClick={onTapToggle}
+        className="flex items-center justify-center flex-1 cursor-pointer no-select w-full bg-transparent border-0"
+        aria-label="Play"
+      >
         <span
           className="opacity-30"
           style={{ fontSize: `${fontSize}rem`, fontFamily }}
         >
           Press play to start
         </span>
-      </div>
+      </button>
     );
   }
 
@@ -41,27 +47,32 @@ export default function RsvpDisplay({ token }: Props) {
   const wordColor = getWordColor(token);
 
   return (
-    <div
-      className="flex items-center justify-center flex-1 select-none cursor-default"
+    <button
+      type="button"
+      onClick={onTapToggle}
+      className="flex items-center justify-center flex-1 no-select w-full bg-transparent border-0 cursor-pointer"
       style={{ caretColor: 'transparent' }}
+      aria-label="Toggle play/pause"
     >
       <div className="relative w-full max-w-2xl px-4">
-        {/* Word display — ORP char pinned to center */}
+        {/* Word display — ORP char pinned to screen center via 3-col grid (1fr | auto | 1fr) */}
         <div
-          className="relative whitespace-nowrap"
-          style={{ fontSize: `${fontSize}rem`, fontFamily, caretColor: 'transparent' }}
+          className="grid whitespace-nowrap"
+          style={{
+            gridTemplateColumns: '1fr auto 1fr',
+            fontSize: `${fontSize}rem`,
+            fontFamily,
+            caretColor: 'transparent',
+          }}
         >
-          {/* Before ORP: right-aligned, ending at center */}
+          {/* Before ORP: right-aligned against the ORP column */}
           <span
-            className="inline-block text-right"
-            style={{
-              width: '50%',
-              color: wordColor,
-            }}
+            className="text-right overflow-hidden"
+            style={{ color: wordColor }}
           >
             {before}
           </span>
-          {/* ORP character: at center */}
+          {/* ORP character: sits in the auto-sized center column */}
           <span
             style={{
               color: showORP ? orpColor : wordColor,
@@ -70,8 +81,11 @@ export default function RsvpDisplay({ token }: Props) {
           >
             {orp}
           </span>
-          {/* After ORP: left-aligned, starting after center */}
-          <span style={{ color: wordColor }}>
+          {/* After ORP: left-aligned past the ORP column */}
+          <span
+            className="text-left overflow-hidden"
+            style={{ color: wordColor }}
+          >
             {after}
           </span>
         </div>
@@ -88,6 +102,6 @@ export default function RsvpDisplay({ token }: Props) {
           </div>
         )}
       </div>
-    </div>
+    </button>
   );
 }

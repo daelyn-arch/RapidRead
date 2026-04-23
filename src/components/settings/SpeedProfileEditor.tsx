@@ -58,7 +58,7 @@ export default function SpeedProfileEditor() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setTransitionDuration(Math.max(0, profile.transitionDuration - 0.5))}
+            onClick={() => setTransitionDuration(Math.max(0, Math.round((profile.transitionDuration - 0.1) * 10) / 10))}
             className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
             style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
           >
@@ -68,7 +68,7 @@ export default function SpeedProfileEditor() {
             {profile.transitionDuration.toFixed(1)}s
           </span>
           <button
-            onClick={() => setTransitionDuration(profile.transitionDuration + 0.5)}
+            onClick={() => setTransitionDuration(Math.round((profile.transitionDuration + 0.1) * 10) / 10)}
             className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
             style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
           >
