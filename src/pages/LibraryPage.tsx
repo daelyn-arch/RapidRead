@@ -5,6 +5,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useBookImport } from '@/hooks/useBookImport';
 import ImportButton from '@/components/library/ImportButton';
 import BookList from '@/components/library/BookList';
+import UpgradeBanner from '@/billing/UpgradeBanner';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -109,6 +110,8 @@ export default function LibraryPage() {
             </button>
           </div>
         )}
+
+        <UpgradeBanner />
 
         <ImportButton onFileSelected={handleImport} importing={importing} />
 
