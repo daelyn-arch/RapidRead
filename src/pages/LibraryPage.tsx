@@ -39,7 +39,7 @@ export default function LibraryPage() {
     >
       {/* Header */}
       <header
-        className="flex items-center justify-between px-6 py-4 border-b"
+        className="safe-top flex items-center justify-between px-6 py-4 border-b"
         style={{ borderColor: 'var(--bg-tertiary)' }}
       >
         <h1
