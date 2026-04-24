@@ -3,12 +3,22 @@ import { useSettingsStore } from '@/store/settingsStore';
 import SpeedProfileEditor from '@/components/settings/SpeedProfileEditor';
 import KnownWordManager from '@/components/settings/KnownWordManager';
 import ManageLibrary from '@/components/settings/ManageLibrary';
-import type { Theme } from '@/types/settings';
+import type { ReadingFont, Theme } from '@/types/settings';
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'dark', label: 'Dark' },
   { value: 'light', label: 'Light' },
   { value: 'sepia', label: 'Sepia' },
+  { value: 'parchment', label: 'Parchment' },
+];
+
+const READING_FONTS: { value: ReadingFont; label: string; family: string }[] = [
+  { value: 'system', label: 'System default', family: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' },
+  { value: 'georgia', label: 'Georgia', family: 'Georgia, "Times New Roman", serif' },
+  { value: 'merriweather', label: 'Merriweather', family: '"Merriweather Variable", Merriweather, Georgia, serif' },
+  { value: 'literata', label: 'Literata', family: '"Literata Variable", Literata, Georgia, serif' },
+  { value: 'inter', label: 'Inter', family: '"Inter Variable", Inter, system-ui, sans-serif' },
+  { value: 'atkinson', label: 'Atkinson Hyperlegible', family: '"Atkinson Hyperlegible", system-ui, sans-serif' },
 ];
 
 const COLOR_PALETTE = [
@@ -62,8 +72,8 @@ function ColorGrid({ label, value, onChange, disabled }: ColorGridProps) {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { theme, fontSize, fontFamily, showORP, orpColor, dialogueColor, unfamiliarColor } = useSettingsStore(s => s.settings);
-  const { setTheme, setFontSize, setOrpColor, setDialogueColor, setUnfamiliarColor } = useSettingsStore();
+  const { theme, fontSize, fontFamily, readingFont, showORP, orpColor, dialogueColor, unfamiliarColor, karaokeDialogue } = useSettingsStore(s => s.settings);
+  const { setTheme, setFontSize, setReadingFont, setOrpColor, setDialogueColor, setUnfamiliarColor, setKaraokeDialogue } = useSettingsStore();
   const toggleORP = () => useSettingsStore.setState(s => ({ settings: { ...s.settings, showORP: !s.settings.showORP } }));
 
   return (
@@ -219,6 +229,83 @@ export default function SettingsPage() {
               value={unfamiliarColor}
               onChange={setUnfamiliarColor}
             />
+          </div>
+        </div>
+
+        {/* Reading */}
+        <div>
+          <h3
+            className="text-lg font-semibold mb-3"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Reading
+          </h3>
+          <div className="space-y-3">
+            <div
+              className="flex items-center justify-between py-2 px-4 rounded-lg"
+              style={{ backgroundColor: 'var(--bg-secondary)' }}
+            >
+              <div className="min-w-0 pr-4">
+                <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                  Karaoke dialogue mode
+                </div>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                  Show full dialogue blocks with a moving word highlight. Keeps the pacing but lets you see tone and sarcasm in context.
+                </p>
+              </div>
+              <button
+                onClick={() => setKaraokeDialogue(!karaokeDialogue)}
+                className="w-10 h-6 rounded-full relative transition-colors shrink-0"
+                style={{
+                  backgroundColor: karaokeDialogue ? 'var(--accent)' : 'var(--bg-tertiary)',
+                }}
+                aria-pressed={karaokeDialogue}
+              >
+                <div
+                  className="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform"
+                  style={{
+                    transform: karaokeDialogue ? 'translateX(20px)' : 'translateX(4px)',
+                  }}
+                />
+              </button>
+            </div>
+
+            {/* Reading font picker */}
+            <div
+              className="py-3 px-4 rounded-lg"
+              style={{ backgroundColor: 'var(--bg-secondary)' }}
+            >
+              <div className="text-sm mb-3" style={{ color: 'var(--text-primary)' }}>
+                Reading font
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {READING_FONTS.map(f => {
+                  const isActive = readingFont === f.value;
+                  return (
+                    <button
+                      key={f.value}
+                      onClick={() => setReadingFont(f.value)}
+                      className="rounded-lg px-3 py-2 text-left transition-colors"
+                      style={{
+                        backgroundColor: isActive ? 'var(--accent)' : 'var(--bg-primary)',
+                        color: isActive ? '#fff' : 'var(--text-primary)',
+                        border: `1px solid ${isActive ? 'var(--accent)' : 'var(--bg-tertiary)'}`,
+                      }}
+                    >
+                      <div className="text-[11px] uppercase tracking-wide opacity-70 mb-0.5">
+                        {f.label}
+                      </div>
+                      <div
+                        className="text-sm truncate"
+                        style={{ fontFamily: f.family }}
+                      >
+                        Read twice as fast.
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 

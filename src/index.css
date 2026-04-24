@@ -9,6 +9,8 @@
   --text-secondary: #94a3b8;
   --accent: #3b82f6;
   --accent-hover: #2563eb;
+  /* Driven by settingsStore.readingFont; defaults to system stack. */
+  --reading-font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
 [data-theme="light"] {
@@ -30,6 +32,36 @@
   --accent: #92400e;
   --accent-hover: #78350f;
 }
+
+[data-theme="parchment"] {
+  --bg-primary: #f5e8cc;
+  --bg-secondary: #ebdbb8;
+  --bg-tertiary: #d6c59c;
+  --text-primary: #3a2816;
+  --text-secondary: #6b4f34;
+  --accent: #8b2a1a;
+  --accent-hover: #6e2114;
+  --orp-color: #8b2a1a;
+}
+
+/* Subtle paper-grain texture for the parchment theme. Fixed-attachment so
+   the grain doesn't move with Page View scrolling. Uses an inline SVG
+   turbulence noise at ~4% opacity — reads as tactile paper, not pattern. */
+[data-theme="parchment"] body {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.2 0 0 0 0 0.15 0 0 0 0 0.08 0 0 0 0.35 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.18'/></svg>");
+  background-size: 220px 220px;
+  background-attachment: fixed;
+  background-repeat: repeat;
+}
+
+/* Reading-font selector. Values must match ReadingFont union in types/settings.ts.
+   Applied by setting data-reading-font on <body> (AuthProvider mount). */
+[data-reading-font="system"]    { --reading-font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+[data-reading-font="georgia"]   { --reading-font-family: Georgia, "Times New Roman", serif; }
+[data-reading-font="merriweather"] { --reading-font-family: "Merriweather Variable", Merriweather, Georgia, serif; }
+[data-reading-font="literata"]  { --reading-font-family: "Literata Variable", Literata, Georgia, serif; }
+[data-reading-font="inter"]     { --reading-font-family: "Inter Variable", Inter, system-ui, sans-serif; }
+[data-reading-font="atkinson"]  { --reading-font-family: "Atkinson Hyperlegible", system-ui, sans-serif; }
 
 html, body {
   margin: 0;

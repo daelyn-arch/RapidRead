@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/literata": "^5.2.8",
+    "@fontsource-variable/merriweather": "^5.2.6",
+    "@fontsource/atkinson-hyperlegible": "^5.2.8",
     "@supabase/supabase-js": "^2.104.0",
     "@vercel/node": "^5.7.13",
     "epubjs": "^0.3.93",

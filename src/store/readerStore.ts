@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 import type { WordToken } from '@/types/rsvp';
+import {
+  buildDialogueBlockIndex,
+  computeDialogueBlocks,
+  type DialogueBlock,
+} from '@/engine/dialogueBlocks';
 
 interface ReaderState {
   currentBookId: string | null;
@@ -9,6 +14,8 @@ interface ReaderState {
   isPlaying: boolean;
   currentToken: WordToken | null;
   effectiveWpm: number;
+  dialogueBlocks: DialogueBlock[];
+  dialogueBlockIndex: Map<number, DialogueBlock>;
   setBook: (bookId: string) => void;
   setChapter: (chapterIndex: number) => void;
   setTokens: (tokens: WordToken[]) => void;
@@ -25,10 +32,16 @@ export const useReaderStore = create<ReaderState>()((set) => ({
   isPlaying: false,
   currentToken: null,
   effectiveWpm: 0,
+  dialogueBlocks: [],
+  dialogueBlockIndex: new Map(),
 
   setBook: (bookId: string) => set({ currentBookId: bookId }),
   setChapter: (chapterIndex: number) => set({ currentChapterIndex: chapterIndex }),
-  setTokens: (tokens: WordToken[]) => set({ tokens }),
+  setTokens: (tokens: WordToken[]) => {
+    const dialogueBlocks = computeDialogueBlocks(tokens);
+    const dialogueBlockIndex = buildDialogueBlockIndex(dialogueBlocks);
+    set({ tokens, dialogueBlocks, dialogueBlockIndex });
+  },
   setCurrentToken: (token: WordToken | null, index: number, effectiveWpm?: number) => set({
     currentToken: token,
     currentTokenIndex: index,
@@ -42,5 +55,7 @@ export const useReaderStore = create<ReaderState>()((set) => ({
     currentTokenIndex: 0,
     isPlaying: false,
     currentToken: null,
+    dialogueBlocks: [],
+    dialogueBlockIndex: new Map(),
   }),
 }));

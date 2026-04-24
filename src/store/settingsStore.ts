@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppSettings, Theme } from '@/types/settings';
+import type { AppSettings, ReadingFont, Theme } from '@/types/settings';
 import type { SpeedProfile, SpeedRule } from '@/types/rsvp';
 import { DEFAULT_SETTINGS } from '@/types/settings';
 import { DEFAULT_PROFILE } from '@/types/rsvp';
@@ -15,6 +15,8 @@ interface SettingsState {
   setRuleWpm: (profileId: string, ruleId: string, wpm: number) => void;
   setTheme: (theme: Theme) => void;
   setFontSize: (size: number) => void;
+  setReadingFont: (font: ReadingFont) => void;
+  setKaraokeDialogue: (enabled: boolean) => void;
   setOrpColor: (color: string) => void;
   setDialogueColor: (color: string) => void;
   setUnfamiliarColor: (color: string) => void;
@@ -98,6 +100,14 @@ export const useSettingsStore = create<SettingsState>()(
         settings: { ...state.settings, fontSize: Math.max(1.5, Math.min(6, size)) },
       })),
 
+      setReadingFont: (font: ReadingFont) => set(state => ({
+        settings: { ...state.settings, readingFont: font },
+      })),
+
+      setKaraokeDialogue: (enabled: boolean) => set(state => ({
+        settings: { ...state.settings, karaokeDialogue: enabled },
+      })),
+
       setOrpColor: (color: string) => set(state => ({
         settings: { ...state.settings, orpColor: color },
       })),
@@ -156,12 +166,14 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'rapidread-settings',
-      version: 1,
+      version: 2,
       migrate: (persisted: unknown) => {
         const state = persisted as { settings?: AppSettings };
         if (state?.settings) {
           if (state.settings.dialogueColor === undefined) state.settings.dialogueColor = '#60a5fa';
           if (state.settings.unfamiliarColor === undefined) state.settings.unfamiliarColor = '#fbbf24';
+          if (state.settings.karaokeDialogue === undefined) state.settings.karaokeDialogue = true;
+          if (state.settings.readingFont === undefined) state.settings.readingFont = 'system';
         }
         if (state?.settings?.profiles) {
           for (const profile of state.settings.profiles) {

@@ -1,5 +1,7 @@
 import { useSettingsStore } from '@/store/settingsStore';
+import { useReaderStore } from '@/store/readerStore';
 import type { WordToken } from '@/types/rsvp';
+import DialogueKaraoke from './DialogueKaraoke';
 
 interface Props {
   token: WordToken | null;
@@ -7,7 +9,10 @@ interface Props {
 }
 
 export default function RsvpDisplay({ token, onTapToggle }: Props) {
-  const { fontSize, showORP, orpColor, dialogueColor, unfamiliarColor, fontFamily } = useSettingsStore(s => s.settings);
+  const { fontSize, showORP, orpColor, dialogueColor, unfamiliarColor, fontFamily, karaokeDialogue } = useSettingsStore(s => s.settings);
+  const tokens = useReaderStore(s => s.tokens);
+  const currentTokenIndex = useReaderStore(s => s.currentTokenIndex);
+  const dialogueBlockIndex = useReaderStore(s => s.dialogueBlockIndex);
 
   const getWordColor = (t: WordToken): string => {
     if (t.context.isDialogue) return dialogueColor;
@@ -29,6 +34,29 @@ export default function RsvpDisplay({ token, onTapToggle }: Props) {
         >
           Press play to start
         </span>
+      </button>
+    );
+  }
+
+  // Dialogue karaoke mode: if enabled and the current token is inside a
+  // dialogue block, show the entire block with a moving highlight instead
+  // of single-word RSVP. Lets the reader see the context (tone, humor,
+  // sarcasm) while still pacing their eyes.
+  const activeBlock = karaokeDialogue ? dialogueBlockIndex.get(currentTokenIndex) : undefined;
+  if (activeBlock) {
+    return (
+      <button
+        type="button"
+        onClick={onTapToggle}
+        className="flex items-center justify-center flex-1 no-select w-full bg-transparent border-0 cursor-pointer"
+        style={{ caretColor: 'transparent' }}
+        aria-label="Toggle play/pause"
+      >
+        <DialogueKaraoke
+          tokens={tokens}
+          block={activeBlock}
+          currentIndex={currentTokenIndex}
+        />
       </button>
     );
   }
@@ -90,8 +118,8 @@ export default function RsvpDisplay({ token, onTapToggle }: Props) {
             style={{ color: wordColor, top: '100%' }}
           >
             {context.isDialogue && context.isUnfamiliar
-              ? '\u25CF \u25CF'
-              : '\u25CF'}
+              ? '● ●'
+              : '●'}
           </div>
         )}
       </div>

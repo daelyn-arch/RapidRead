@@ -13,6 +13,8 @@ import PlaybackControls from '@/components/reader/PlaybackControls';
 import ProgressBar from '@/components/reader/ProgressBar';
 import ChapterNav from '@/components/reader/ChapterNav';
 import PageView from '@/components/reader/PageView';
+import WordActionsMenu from '@/components/reader/WordActionsMenu';
+import BookmarksPanel from '@/components/reader/BookmarksPanel';
 import type { Chapter } from '@/types/book';
 
 type ViewMode = 'rsvp' | 'page';
@@ -23,8 +25,10 @@ export default function ReaderPage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [showChapterNav, setShowChapterNav] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('rsvp');
+  const [activeMenu, setActiveMenu] = useState<{ tokenIndex: number; rect: DOMRect } | null>(null);
 
   const { currentToken, currentTokenIndex, isPlaying, currentChapterIndex, tokens } = useReaderStore();
   const setBook = useReaderStore(s => s.setBook);
@@ -34,6 +38,7 @@ export default function ReaderPage() {
   const books = useLibraryStore(s => s.books);
   const getProgress = useLibraryStore(s => s.getProgress);
   const updateProgress = useLibraryStore(s => s.updateProgress);
+  const addBookmark = useLibraryStore(s => s.addBookmark);
   const setBaseWpm = useSettingsStore(s => s.setBaseWpm);
   const getActiveProfile = useSettingsStore(s => s.getActiveProfile);
   const theme = useSettingsStore(s => s.settings.theme);
@@ -161,6 +166,32 @@ export default function ReaderPage() {
     playback.seekTo(index);
   }, [playback]);
 
+  const handleWordLongPress = useCallback((index: number, rect: DOMRect) => {
+    playback.pause();
+    setActiveMenu({ tokenIndex: index, rect });
+  }, [playback]);
+
+  const handleAddBookmarkFromMenu = useCallback((note?: string) => {
+    if (!bookId || !activeMenu) return;
+    addBookmark({
+      bookId,
+      chapterIndex: currentChapterIndex,
+      wordIndex: activeMenu.tokenIndex,
+      label: note,
+    });
+  }, [bookId, activeMenu, currentChapterIndex, addBookmark]);
+
+  const handleJumpToBookmark = useCallback((chapterIndex: number, wordIndex: number) => {
+    setShowBookmarks(false);
+    if (chapterIndex !== currentChapterIndex) {
+      // Let the chapter load first, then seek.
+      savedPositionRef.current = wordIndex;
+      loadChapter(chapterIndex);
+    } else {
+      playback.seekTo(wordIndex);
+    }
+  }, [currentChapterIndex, loadChapter, playback]);
+
   const keyboardActions = useMemo(() => ({
     toggle: playback.toggle,
     skipForward: playback.skipForward,
@@ -247,6 +278,18 @@ export default function ReaderPage() {
             {viewMode === 'rsvp' ? 'Page' : 'RSVP'}
           </button>
 
+          {/* Bookmarks */}
+          <button
+            onClick={() => setShowBookmarks(true)}
+            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--text-secondary)' }}
+            title="Bookmarks"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+
           {/* Contents */}
           <button
             onClick={() => setShowChapterNav(true)}
@@ -285,6 +328,7 @@ export default function ReaderPage() {
           tokens={tokens}
           currentIndex={currentTokenIndex}
           onWordClick={handleWordClick}
+          onWordLongPress={handleWordLongPress}
         />
       )}
 
@@ -316,6 +360,30 @@ export default function ReaderPage() {
           currentIndex={currentChapterIndex}
           onSelect={loadChapter}
           onClose={() => setShowChapterNav(false)}
+        />
+      )}
+
+      {/* Word actions menu (Page View long-press / right-click) */}
+      {activeMenu && tokens[activeMenu.tokenIndex] && (
+        <WordActionsMenu
+          anchorRect={activeMenu.rect}
+          word={tokens[activeMenu.tokenIndex].word}
+          tokenIndex={activeMenu.tokenIndex}
+          onClose={() => setActiveMenu(null)}
+          onSeek={(i) => playback.seekTo(i)}
+          onBookmark={handleAddBookmarkFromMenu}
+        />
+      )}
+
+      {/* Bookmarks panel */}
+      {showBookmarks && bookId && (
+        <BookmarksPanel
+          bookId={bookId}
+          chapters={chapters}
+          currentChapterIndex={currentChapterIndex}
+          tokens={tokens}
+          onJump={handleJumpToBookmark}
+          onClose={() => setShowBookmarks(false)}
         />
       )}
     </div>
