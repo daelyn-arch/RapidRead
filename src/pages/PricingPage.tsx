@@ -138,7 +138,7 @@ export default function PricingPage() {
             <Link
               to="/app"
               className="mt-6 inline-block w-full text-center rounded-md px-4 py-2 font-medium border"
-              style={{ borderColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+              style={{ borderColor: 'var(--accent)', color: 'var(--text-primary)' }}
             >
               Start reading
             </Link>
@@ -188,7 +188,13 @@ export default function PricingPage() {
                     You’re on Pro — Manage →
                   </Link>
                 )
-                : <UpgradeButton plan={plan} className="w-full rounded-md px-4 py-2 font-medium" />}
+                : (
+                  <UpgradeButton
+                    plan={plan}
+                    className="w-full rounded-md px-4 py-2 font-medium border"
+                    style={{ background: 'var(--accent)', borderColor: 'var(--accent)', color: 'white' }}
+                  />
+                )}
             </div>
           </div>
         </div>

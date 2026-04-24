@@ -6,10 +6,11 @@ import { startCheckout } from './startCheckout';
 interface Props {
   plan?: 'monthly' | 'yearly';
   className?: string;
+  style?: React.CSSProperties;
   children?: React.ReactNode;
 }
 
-export default function UpgradeButton({ plan = 'monthly', className, children }: Props) {
+export default function UpgradeButton({ plan = 'monthly', className, style, children }: Props) {
   const { session } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -42,7 +43,7 @@ export default function UpgradeButton({ plan = 'monthly', className, children }:
           className ??
           'rounded-md px-4 py-2 font-medium disabled:opacity-60'
         }
-        style={className ? undefined : { background: 'var(--accent)', color: 'white' }}
+        style={style ?? (className ? undefined : { background: 'var(--accent)', color: 'white' })}
       >
         {busy ? 'Redirecting…' : (children ?? 'Upgrade to Pro')}
       </button>
