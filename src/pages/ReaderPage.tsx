@@ -263,14 +263,14 @@ export default function ReaderPage() {
 
   return (
     <div
-      className="flex flex-col min-h-[100dvh] h-[100dvh] overflow-hidden"
+      className="safe-top flex flex-col min-h-[100dvh] h-[100dvh] overflow-hidden"
       data-theme={theme}
       style={{ backgroundColor: 'var(--bg-primary)' }}
       onClick={() => viewMode === 'rsvp' && setControlsVisible(true)}
     >
       {/* Header — hidden entirely in focus mode */}
       {!focusMode && <div
-        className="safe-top flex items-center justify-between px-4 py-3 shrink-0 transition-opacity duration-300 sticky top-0 z-40"
+        className="flex items-center justify-between px-4 py-3 shrink-0 transition-opacity duration-300 sticky top-0 z-40"
         style={{
           opacity: controlsVisible ? 1 : 0,
           pointerEvents: controlsVisible ? 'auto' : 'none',

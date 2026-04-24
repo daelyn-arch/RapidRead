@@ -44,7 +44,7 @@ export default function PageView({ tokens, currentIndex, onWordClick, onWordLong
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-6 py-8 max-w-3xl mx-auto w-full leading-relaxed cursor-default"
+      className="flex-1 overflow-y-auto px-6 pt-14 pb-8 max-w-3xl mx-auto w-full leading-relaxed cursor-default"
       style={{
         fontFamily: 'var(--reading-font-family, inherit)',
         // Back-compat: fall back to the legacy fontFamily if the CSS var isn't set.
