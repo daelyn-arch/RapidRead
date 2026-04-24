@@ -7,18 +7,25 @@ import { useAuth } from '@/auth/useAuth';
 
 const FREE_FEATURES = [
   'Import unlimited EPUB / TXT files',
-  'Context-aware RSVP reader',
-  'Dialogue & unfamiliar word slowdowns',
-  'Themes (dark, light, sepia)',
+  'One-word RSVP reader at your chosen base speed',
+  'Customize ORP, dialogue, and unfamiliar word colors',
+  'Dark and light themes',
   'Works offline (PWA)',
 ];
 
 const PRO_FEATURES = [
   'Everything in Free',
-  'Cloud sync of library + progress + bookmarks',
-  'Pick up on any device, instantly',
-  'Priority email support',
-  'Early access to PDF, AI summaries, reading stats',
+  'Context-aware speed: dialogue, unfamiliar words, sentence ends, paragraph starts, commas, long words',
+  'Adjustable transition rate (smooth ramp back to base speed)',
+  'Customize the long-word threshold',
+  'Karaoke dialogue mode',
+  'Sepia and Parchment themes',
+  'Reading fonts: Georgia, Merriweather, Literata, Inter, Atkinson Hyperlegible',
+  'Word actions: tap any word for definitions, notes, bookmarks',
+  'Bookmarks panel with cross-chapter jump',
+  'Custom known-words list',
+  'Multiple speed profiles',
+  'Cloud sync of library, progress, and bookmarks across every device',
 ];
 
 export default function PricingPage() {
@@ -107,7 +114,7 @@ export default function PricingPage() {
                   color: plan === opt ? 'white' : 'var(--text-secondary)',
                 }}
               >
-                {opt === 'monthly' ? 'Monthly' : 'Yearly · save 25%'}
+                {opt === 'monthly' ? 'Monthly' : 'Yearly · save 33%'}
               </button>
             ))}
           </div>
@@ -152,14 +159,14 @@ export default function PricingPage() {
               Your library, synced everywhere.
             </p>
             <div className="mt-4 text-3xl font-semibold">
-              {plan === 'monthly' ? '$5' : '$45'}
+              {plan === 'monthly' ? '$0.99' : '$7.99'}
               <span className="text-base font-normal" style={{ color: 'var(--text-secondary)' }}>
                 /{plan === 'monthly' ? 'month' : 'year'}
               </span>
             </div>
             {plan === 'yearly' && (
               <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-                Works out to $3.75/month.
+                Works out to about $0.67/month.
               </p>
             )}
             <ul className="mt-5 space-y-2 text-sm">

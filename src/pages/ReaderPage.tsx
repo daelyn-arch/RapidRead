@@ -15,6 +15,8 @@ import ChapterNav from '@/components/reader/ChapterNav';
 import PageView from '@/components/reader/PageView';
 import WordActionsMenu from '@/components/reader/WordActionsMenu';
 import BookmarksPanel from '@/components/reader/BookmarksPanel';
+import PaywallModal from '@/billing/PaywallModal';
+import { useIsPro } from '@/billing/useIsPro';
 import type { Chapter } from '@/types/book';
 
 type ViewMode = 'rsvp' | 'page';
@@ -29,6 +31,8 @@ export default function ReaderPage() {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('rsvp');
   const [activeMenu, setActiveMenu] = useState<{ tokenIndex: number; rect: DOMRect } | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const isPro = useIsPro();
 
   const { currentToken, currentTokenIndex, isPlaying, currentChapterIndex, tokens } = useReaderStore();
   const setBook = useReaderStore(s => s.setBook);
@@ -169,9 +173,14 @@ export default function ReaderPage() {
   }, [playback]);
 
   const handleWordLongPress = useCallback((index: number, rect: DOMRect) => {
+    if (!isPro) {
+      playback.pause();
+      setPaywallOpen(true);
+      return;
+    }
     playback.pause();
     setActiveMenu({ tokenIndex: index, rect });
-  }, [playback]);
+  }, [isPro, playback]);
 
   const handleAddBookmarkFromMenu = useCallback((note?: string) => {
     if (!bookId || !activeMenu) return;
@@ -282,7 +291,7 @@ export default function ReaderPage() {
 
           {/* Bookmarks */}
           <button
-            onClick={() => setShowBookmarks(true)}
+            onClick={() => isPro ? setShowBookmarks(true) : setPaywallOpen(true)}
             className="p-2 rounded-lg hover:opacity-80 transition-opacity"
             style={{ color: 'var(--text-secondary)' }}
             title="Bookmarks"
@@ -386,6 +395,14 @@ export default function ReaderPage() {
           onClose={() => setShowBookmarks(false)}
         />
       )}
+
+      {/* Pro paywall (triggered when Free users long-press a word) */}
+      <PaywallModal
+        open={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        title="Word actions are a Pro feature"
+        description="Upgrade to RapidRead Pro to look up definitions, leave notes, and bookmark any word. $0.99/month or $7.99/year."
+      />
     </div>
   );
 }

@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useIsPro } from '@/billing/useIsPro';
+import PaywallModal from '@/billing/PaywallModal';
 
 interface StepperProps {
   label: string;
@@ -8,21 +11,35 @@ interface StepperProps {
   disabled?: boolean;
   labelColor?: string;
   valueWidth?: string;
+  locked?: boolean;
+  onLockedClick?: () => void;
 }
 
-function Stepper({ label, value, onDec, onInc, disabled, labelColor, valueWidth }: StepperProps) {
+function Stepper({ label, value, onDec, onInc, disabled, labelColor, valueWidth, locked, onLockedClick }: StepperProps) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div
+      className="flex flex-col items-center gap-1"
+      onClick={locked ? onLockedClick : undefined}
+      style={{ cursor: locked ? 'pointer' : 'default' }}
+    >
       <div
-        className="text-[10px] font-medium uppercase tracking-wide"
+        className="text-[10px] font-medium uppercase tracking-wide flex items-center gap-1"
         style={{ color: labelColor ?? 'var(--text-secondary)' }}
       >
         {label}
+        {locked && (
+          <span
+            className="text-[9px] px-1 rounded-sm"
+            style={{ background: 'var(--accent)', color: 'white' }}
+          >
+            PRO
+          </span>
+        )}
       </div>
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5" style={{ pointerEvents: locked ? 'none' : 'auto', opacity: locked ? 0.4 : 1 }}>
         <button
           onClick={onDec}
-          disabled={disabled}
+          disabled={disabled || locked}
           className="w-9 h-9 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity text-lg font-bold disabled:opacity-30"
           style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
         >
@@ -31,7 +48,7 @@ function Stepper({ label, value, onDec, onInc, disabled, labelColor, valueWidth 
         <div
           className="text-sm font-mono text-center"
           style={{
-            color: disabled ? 'var(--text-secondary)' : 'var(--text-primary)',
+            color: (disabled || locked) ? 'var(--text-secondary)' : 'var(--text-primary)',
             minWidth: valueWidth ?? '3.5rem',
           }}
         >
@@ -39,7 +56,7 @@ function Stepper({ label, value, onDec, onInc, disabled, labelColor, valueWidth 
         </div>
         <button
           onClick={onInc}
-          disabled={disabled}
+          disabled={disabled || locked}
           className="w-9 h-9 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity text-lg font-bold disabled:opacity-30"
           style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
         >
@@ -57,6 +74,8 @@ export default function PlaybackControls() {
   const setTransitionDuration = useSettingsStore(s => s.setTransitionDuration);
   const dialogueColor = useSettingsStore(s => s.settings.dialogueColor);
   const unfamiliarColor = useSettingsStore(s => s.settings.unfamiliarColor);
+  const isPro = useIsPro();
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const dialogueRule = profile.rules.find(r => r.id === 'dialogue');
   const unfamiliarRule = profile.rules.find(r => r.id === 'unfamiliar');
@@ -64,6 +83,8 @@ export default function PlaybackControls() {
   const transitionValue = profile.transitionDuration.toFixed(2) + 's';
   const stepTransition = (delta: number) =>
     setTransitionDuration(Math.max(0, Math.round((profile.transitionDuration + delta) * 100) / 100));
+
+  const openPaywall = () => setPaywallOpen(true);
 
   return (
     <div
@@ -79,6 +100,8 @@ export default function PlaybackControls() {
             onInc={() => setRuleWpm(profile.id, dialogueRule.id, dialogueRule.wpm + 25)}
             disabled={!dialogueRule.enabled}
             labelColor={dialogueColor}
+            locked={!isPro}
+            onLockedClick={openPaywall}
           />
         )}
         <Stepper
@@ -95,6 +118,8 @@ export default function PlaybackControls() {
             onInc={() => setRuleWpm(profile.id, unfamiliarRule.id, unfamiliarRule.wpm + 25)}
             disabled={!unfamiliarRule.enabled}
             labelColor={unfamiliarColor}
+            locked={!isPro}
+            onLockedClick={openPaywall}
           />
         )}
         <Stepper
@@ -103,8 +128,17 @@ export default function PlaybackControls() {
           onDec={() => stepTransition(-0.05)}
           onInc={() => stepTransition(0.05)}
           valueWidth="3rem"
+          locked={!isPro}
+          onLockedClick={openPaywall}
         />
       </div>
+
+      <PaywallModal
+        open={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        title="Context-aware speed is a Pro feature"
+        description="Upgrade to RapidRead Pro for smarter pacing — slow down for dialogue, unfamiliar words, and sentence breaks. $0.99/month or $7.99/year."
+      />
     </div>
   );
 }

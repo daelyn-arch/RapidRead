@@ -11,8 +11,8 @@ interface Props {
 export default function PaywallModal({
   open,
   onClose,
-  title = 'Upgrade to Pro to sync',
-  description = 'Cloud sync keeps your library and reading progress matched across every device. $5/month, cancel anytime.',
+  title = 'Upgrade to Pro',
+  description = 'Unlock the full RapidRead experience. $0.99/month or $7.99/year. Cancel anytime.',
 }: Props) {
   const navigate = useNavigate();
   if (!open) return null;
@@ -40,7 +40,7 @@ export default function PaywallModal({
             plan="monthly"
             className="w-full rounded-md py-2 font-medium"
           >
-            Upgrade — $5/month
+            Upgrade — $0.99/month
           </UpgradeButton>
           <button
             type="button"

@@ -66,10 +66,10 @@ export default function UpgradeBanner() {
 
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-sm">
-          Sync your library across every device
+          Unlock the full RapidRead experience
         </div>
         <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-          RapidRead Pro keeps your books, progress, and bookmarks in sync on your phone, tablet, and laptop. $5/month or $45/year. Cancel anytime.
+          Context-aware speed, karaoke dialogue, reading fonts, themes, bookmarks, word definitions, and cloud sync — $0.99/month or $7.99/year. Cancel anytime.
         </p>
         {error && (
           <p className="text-xs mt-2" style={{ color: '#fca5a5' }}>{error}</p>

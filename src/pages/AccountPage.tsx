@@ -6,6 +6,32 @@ import { useIsPro } from '@/billing/useIsPro';
 import UpgradeButton from '@/billing/UpgradeButton';
 import ManageBillingButton from '@/billing/ManageBillingButton';
 
+/**
+ * Honest Pro feature list. Every bullet here must be a feature that
+ * actually works in production right now. No roadmap items. No fluff.
+ */
+const PRO_FEATURES: string[] = [
+  'Context-aware speed: slowdowns for dialogue, unfamiliar words, sentence ends, paragraph starts, commas, and long words',
+  'Adjustable transition rate (smooth ramp back to base speed)',
+  'Customize the long-word threshold',
+  'Karaoke dialogue mode — see full quoted lines with a moving highlight',
+  'Sepia and Parchment themes',
+  'Reading fonts: Georgia, Merriweather, Literata, Inter, Atkinson Hyperlegible',
+  'Word actions: tap any word in Page View for definitions, notes, bookmarks',
+  'Bookmarks panel — jump between saved spots across chapters',
+  'Custom known-words list (teach the app character names so they don’t slow you down)',
+  'Multiple speed profiles',
+  'Cloud sync of your library, reading progress, and bookmarks across every device',
+];
+
+const FREE_FEATURES: string[] = [
+  'Import unlimited EPUB and TXT files',
+  'Adjust base reading speed',
+  'Customize ORP, dialogue, and unfamiliar-word colors',
+  'Dark and light themes',
+  'Works offline (PWA, installable)',
+];
+
 export default function AccountPage() {
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const isPro = useIsPro();
@@ -44,7 +70,7 @@ export default function AccountPage() {
       data-theme={theme}
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
-      {/* Header — matches Settings + Reader header patterns */}
+      {/* Header */}
       <header
         className="flex items-center gap-3 px-6 py-4 border-b safe-top"
         style={{ borderColor: 'var(--bg-tertiary)' }}
@@ -65,9 +91,8 @@ export default function AccountPage() {
         </h1>
       </header>
 
-      {/* Content */}
       <main className="flex-1 p-6 max-w-md mx-auto w-full space-y-6" style={{ color: 'var(--text-primary)' }}>
-        {/* Identity block */}
+        {/* Identity */}
         <div>
           <p className="text-xs uppercase tracking-wide mb-1" style={{ color: 'var(--text-secondary)' }}>
             Signed in as
@@ -111,7 +136,7 @@ export default function AccountPage() {
           <div className="mt-4">
             {isPro
               ? <ManageBillingButton className="w-full rounded-md py-2 font-medium border" />
-              : <UpgradeButton plan="monthly" className="w-full rounded-md py-2 font-medium" />}
+              : <UpgradeButton plan="monthly" className="w-full rounded-md py-2 font-medium">Upgrade — $0.99/month</UpgradeButton>}
           </div>
 
           {justUpgraded && !isPro && (
@@ -121,8 +146,49 @@ export default function AccountPage() {
           )}
         </div>
 
-        {/* Sign out — deliberately bottom, full-width, outlined so it
-            doesn't compete with the Upgrade CTA but is clearly a button */}
+        {/* What you get */}
+        <section>
+          <h2 className="text-sm font-semibold mb-3 uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+            {isPro ? 'Your Pro features' : 'What Pro unlocks'}
+          </h2>
+          <ul
+            className="rounded-xl p-4 space-y-2 text-sm"
+            style={{ background: 'var(--bg-secondary)' }}
+          >
+            {PRO_FEATURES.map(f => (
+              <li key={f} className="flex items-start gap-2">
+                <span style={{ color: 'var(--accent)' }}>✓</span>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Free features — always list so users know what they keep if they downgrade */}
+        <section>
+          <h2 className="text-sm font-semibold mb-3 uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+            Free on every account
+          </h2>
+          <ul
+            className="rounded-xl p-4 space-y-2 text-sm"
+            style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+          >
+            {FREE_FEATURES.map(f => (
+              <li key={f} className="flex items-start gap-2">
+                <span>·</span>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {!isPro && (
+          <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
+            $0.99/month or $7.99/year. Cancel anytime. Secure payments by Stripe.
+          </p>
+        )}
+
+        {/* Sign out — deliberate, bottom of the page */}
         <button
           type="button"
           onClick={async () => { await signOut(); navigate('/'); }}
@@ -136,7 +202,6 @@ export default function AccountPage() {
           Sign out
         </button>
 
-        {/* Support link */}
         <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
           Need help or a data export? Email{' '}
           <a className="underline" href="mailto:support@rapidread.app">

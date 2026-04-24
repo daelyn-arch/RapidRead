@@ -1,5 +1,6 @@
 import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
+import { useIsPro } from '@/billing/useIsPro';
 import type { WordToken } from '@/types/rsvp';
 import DialogueKaraoke from './DialogueKaraoke';
 
@@ -13,6 +14,7 @@ export default function RsvpDisplay({ token, onTapToggle }: Props) {
   const tokens = useReaderStore(s => s.tokens);
   const currentTokenIndex = useReaderStore(s => s.currentTokenIndex);
   const dialogueBlockIndex = useReaderStore(s => s.dialogueBlockIndex);
+  const isPro = useIsPro();
 
   const getWordColor = (t: WordToken): string => {
     if (t.context.isDialogue) return dialogueColor;
@@ -42,7 +44,7 @@ export default function RsvpDisplay({ token, onTapToggle }: Props) {
   // dialogue block, show the entire block with a moving highlight instead
   // of single-word RSVP. Lets the reader see the context (tone, humor,
   // sarcasm) while still pacing their eyes.
-  const activeBlock = karaokeDialogue ? dialogueBlockIndex.get(currentTokenIndex) : undefined;
+  const activeBlock = (isPro && karaokeDialogue) ? dialogueBlockIndex.get(currentTokenIndex) : undefined;
   if (activeBlock) {
     return (
       <button

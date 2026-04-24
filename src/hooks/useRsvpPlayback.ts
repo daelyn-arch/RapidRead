@@ -1,25 +1,20 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { PlaybackController } from '@/engine/playbackController';
 import { useReaderStore } from '@/store/readerStore';
-import { useSettingsStore } from '@/store/settingsStore';
 import { useLibraryStore } from '@/store/libraryStore';
+import { useEffectiveProfile } from '@/billing/useEffectiveProfile';
 import type { WordToken, SpeedProfile } from '@/types/rsvp';
 
 export function useRsvpPlayback() {
   const controllerRef = useRef<PlaybackController | null>(null);
   const { setCurrentToken, setPlaying, tokens, currentBookId, currentChapterIndex } = useReaderStore();
-  const getActiveProfile = useSettingsStore(s => s.getActiveProfile);
   const updateProgress = useLibraryStore(s => s.updateProgress);
 
-  // Subscribe to the full active profile so WPM changes trigger a re-sync
-  const activeProfile = useSettingsStore(s => {
-    const prof = s.settings.profiles.find(p => p.id === s.settings.activeProfileId);
-    return prof ?? s.settings.profiles[0];
-  });
+  // Pro-gated profile: Free users get base WPM only (no rules, no transition).
+  const activeProfile = useEffectiveProfile();
 
   useEffect(() => {
-    const profile = getActiveProfile();
-    const controller = new PlaybackController(profile, {
+    const controller = new PlaybackController(activeProfile, {
       onWord: (token: WordToken, index: number, effectiveWpm: number) => {
         setCurrentToken(token, index, effectiveWpm);
       },

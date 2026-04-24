@@ -195,7 +195,7 @@ export default function LandingPage() {
         <section className="mt-16 text-center">
           <h2 className="text-2xl font-semibold">Simple pricing</h2>
           <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>
-            Free forever on one device. <strong style={{ color: 'var(--text-primary)' }}>$5/month</strong> or $45/year for cloud sync. Cancel anytime.
+            Free forever with Base Speed and colors. <strong style={{ color: 'var(--text-primary)' }}>$0.99/month</strong> or $7.99/year unlocks everything else. Cancel anytime.
           </p>
           <Link
             to="/pricing"
