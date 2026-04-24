@@ -91,7 +91,7 @@ export default function PlaybackControls() {
       className="flex flex-col items-center gap-2 py-2 px-2"
       style={{ color: 'var(--text-primary)' }}
     >
-      <div className="flex items-center justify-center gap-2 sm:gap-6 flex-nowrap">
+      <div className="flex items-center justify-center gap-x-3 gap-y-2 sm:gap-6 flex-wrap">
         {dialogueRule && (
           <Stepper
             label="Dialogue"

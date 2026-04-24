@@ -313,18 +313,6 @@ export default function ReaderPage() {
             {viewMode === 'rsvp' ? 'Page' : 'RSVP'}
           </button>
 
-          {/* Bookmarks */}
-          <button
-            onClick={() => isPro ? setShowBookmarks(true) : setPaywallOpen(true)}
-            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--text-secondary)' }}
-            title="Bookmarks"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-
           {/* Contents */}
           <button
             onClick={() => setShowChapterNav(true)}
@@ -338,21 +326,6 @@ export default function ReaderPage() {
               <line x1="3" y1="18" x2="15" y2="18" />
             </svg>
             Contents
-          </button>
-
-          {/* Focus mode toggle — hides everything except the word */}
-          <button
-            onClick={toggleFocusMode}
-            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--text-secondary)' }}
-            title="Focus mode"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="3 9 3 3 9 3" />
-              <polyline points="21 9 21 3 15 3" />
-              <polyline points="21 15 21 21 15 21" />
-              <polyline points="3 15 3 21 9 21" />
-            </svg>
           </button>
 
           {/* Settings */}
@@ -389,7 +362,7 @@ export default function ReaderPage() {
       )}
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0 relative">
         {viewMode === 'rsvp' ? (
           <RsvpDisplay token={currentToken} onTapToggle={playback.toggle} />
         ) : (
@@ -399,6 +372,43 @@ export default function ReaderPage() {
             onWordClick={handleWordClick}
             onWordLongPress={handleWordLongPress}
           />
+        )}
+
+        {/* Top-left: Bookmarks — floats over the word area */}
+        {!focusMode && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isPro) setShowBookmarks(true);
+              else setPaywallOpen(true);
+            }}
+            className="absolute top-3 left-3 p-2 rounded-full hover:opacity-80 transition-opacity z-30"
+            style={{ color: 'var(--text-secondary)', background: 'var(--bg-secondary)', opacity: 0.7 }}
+            title="Bookmarks"
+            aria-label="Bookmarks"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        )}
+
+        {/* Top-right: Focus mode toggle — floats over the word area */}
+        {!focusMode && (
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleFocusMode(); }}
+            className="absolute top-3 right-3 p-2 rounded-full hover:opacity-80 transition-opacity z-30"
+            style={{ color: 'var(--text-secondary)', background: 'var(--bg-secondary)', opacity: 0.7 }}
+            title="Focus mode"
+            aria-label="Enter focus mode"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="3 9 3 3 9 3" />
+              <polyline points="21 9 21 3 15 3" />
+              <polyline points="21 15 21 21 15 21" />
+              <polyline points="3 15 3 21 9 21" />
+            </svg>
+          </button>
         )}
       </div>
 
