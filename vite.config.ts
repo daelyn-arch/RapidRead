@@ -35,6 +35,19 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/api\//, /^\/auth\//],
+        // Don't precache the bundled sample EPUBs — they're ~6 MB total and
+        // 99% of users won't tap them. Fetch on-demand and cache then.
+        globIgnores: ['**/samples/**'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/samples\/.*\.epub$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'sample-books',
+              expiration: { maxEntries: 16, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+        ],
       },
     }),
   ],
