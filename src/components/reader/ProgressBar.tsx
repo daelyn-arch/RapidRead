@@ -1,3 +1,5 @@
+import { useEffectiveProfile } from '@/billing/useEffectiveProfile';
+
 interface Props {
   current: number;
   total: number;
@@ -6,11 +8,25 @@ interface Props {
   isPlaying?: boolean;
 }
 
+function formatTimeLeft(seconds: number): string {
+  if (seconds < 60) return `${Math.max(1, Math.round(seconds))}s`;
+  const minutes = seconds / 60;
+  if (minutes < 60) return `${Math.round(minutes)}m`;
+  const hours = Math.floor(minutes / 60);
+  const m = Math.round(minutes - hours * 60);
+  return m > 0 ? `${hours}h ${m}m` : `${hours}h`;
+}
+
 export default function ProgressBar({ current, total, onSeek, chapterTitle, isPlaying }: Props) {
+  const profile = useEffectiveProfile();
   const percent = total > 0 ? (current / total) * 100 : 0;
   const wordsRemaining = total - current;
-  // Rough estimate at 300 WPM
-  const minutesRemaining = Math.ceil(wordsRemaining / 300);
+  // Estimate based on the user's current base WPM. Free users read at base,
+  // Pro users have rule slowdowns that average out near base for most books,
+  // so this is a close-enough number that updates live as the speed changes.
+  const wpm = Math.max(1, profile.baseWpm);
+  const secondsRemaining = (wordsRemaining * 60) / wpm;
+  const timeLeft = formatTimeLeft(secondsRemaining);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -45,10 +61,10 @@ export default function ProgressBar({ current, total, onSeek, chapterTitle, isPl
         <span className="flex items-center gap-2 shrink-0">
           <span className="hidden sm:inline">
             {percent.toFixed(1)}% &middot; {current}/{total} words
-            {minutesRemaining > 0 && ` · ~${minutesRemaining} min left`}
+            {wordsRemaining > 0 && ` · ~${timeLeft} left`}
           </span>
           <span className="sm:hidden">
-            {percent.toFixed(0)}%{minutesRemaining > 0 && ` · ${minutesRemaining}m`}
+            {percent.toFixed(0)}%{wordsRemaining > 0 && ` · ${timeLeft}`}
           </span>
           {isPlaying !== undefined && (
             <span
