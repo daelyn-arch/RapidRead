@@ -29,15 +29,17 @@ const SAMPLES: Sample[] = [
 ];
 
 interface Props {
+  open: boolean;
+  onClose: () => void;
   onImportFile: (file: File) => void;
   importing: boolean;
 }
 
 /**
- * Pre-loaded public-domain EPUBs from Project Gutenberg that users can tap
- * to try the reader without having to bring their own book.
+ * Modal listing the bundled public-domain EPUBs from Project Gutenberg.
+ * Available to every account — Free or Pro — since they're just books.
  */
-export default function SampleBooks({ onImportFile, importing }: Props) {
+export default function SampleBooks({ open, onClose, onImportFile, importing }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +52,7 @@ export default function SampleBooks({ onImportFile, importing }: Props) {
       const blob = await res.blob();
       const file = new File([blob], s.file, { type: 'application/epub+zip' });
       onImportFile(file);
+      onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -57,46 +60,75 @@ export default function SampleBooks({ onImportFile, importing }: Props) {
     }
   }
 
+  if (!open) return null;
+
   return (
-    <div className="mt-6">
-      <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
-          Try a free sample
-        </h2>
-        <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-          Public domain · Project Gutenberg
-        </span>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/60" />
+
+      <div
+        className="relative w-full max-w-3xl max-h-[80vh] rounded-xl overflow-hidden flex flex-col"
+        style={{ backgroundColor: 'var(--bg-secondary)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div
+          className="px-5 py-4 border-b flex items-center justify-between"
+          style={{ borderColor: 'var(--bg-tertiary)' }}
+        >
+          <div>
+            <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Sample books
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              Public domain classics from Project Gutenberg. Free for everyone — tap to import.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-sm hover:opacity-80 shrink-0"
+            style={{ color: 'var(--text-secondary)' }}
+            aria-label="Close samples"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {SAMPLES.map(s => {
+              const isLoading = loading === s.file;
+              return (
+                <button
+                  key={s.file}
+                  type="button"
+                  onClick={() => loadSample(s)}
+                  disabled={importing || !!loading}
+                  className="text-left rounded-lg p-3 hover:opacity-90 transition-opacity disabled:opacity-50"
+                  style={{ background: 'var(--bg-primary)' }}
+                >
+                  <div className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                    {s.title}
+                  </div>
+                  <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
+                    {s.author}
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>
+                    {isLoading ? 'Loading…' : s.note}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {error && (
+            <p className="mt-3 text-xs" style={{ color: '#fca5a5' }}>
+              Couldn’t load sample: {error}
+            </p>
+          )}
+        </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-        {SAMPLES.map(s => {
-          const isLoading = loading === s.file;
-          return (
-            <button
-              key={s.file}
-              type="button"
-              onClick={() => loadSample(s)}
-              disabled={importing || !!loading}
-              className="text-left rounded-lg p-3 hover:opacity-90 transition-opacity disabled:opacity-50"
-              style={{ background: 'var(--bg-secondary)' }}
-            >
-              <div className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-                {s.title}
-              </div>
-              <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
-                {s.author}
-              </div>
-              <div className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>
-                {isLoading ? 'Loading…' : s.note}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-      {error && (
-        <p className="mt-2 text-xs" style={{ color: '#fca5a5' }}>
-          Couldn’t load sample: {error}
-        </p>
-      )}
     </div>
   );
 }

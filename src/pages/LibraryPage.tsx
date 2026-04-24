@@ -15,6 +15,7 @@ export default function LibraryPage() {
   const theme = useSettingsStore(s => s.settings.theme);
   const { importFile, importing, error, clearError } = useBookImport();
   const [verifiedBannerOpen, setVerifiedBannerOpen] = useState(() => params.get('verified') === '1');
+  const [samplesOpen, setSamplesOpen] = useState(false);
 
   function dismissVerifiedBanner() {
     setVerifiedBannerOpen(false);
@@ -116,9 +117,25 @@ export default function LibraryPage() {
 
         <ImportButton onFileSelected={handleImport} importing={importing} />
 
-        {books.length === 0 && (
-          <SampleBooks onImportFile={handleImport} importing={importing} />
-        )}
+        <button
+          type="button"
+          onClick={() => setSamplesOpen(true)}
+          className="mt-3 w-full rounded-lg py-3 text-sm font-medium border transition-opacity hover:opacity-80"
+          style={{
+            borderColor: 'var(--bg-tertiary)',
+            color: 'var(--text-primary)',
+            background: 'transparent',
+          }}
+        >
+          Browse free sample books
+        </button>
+
+        <SampleBooks
+          open={samplesOpen}
+          onClose={() => setSamplesOpen(false)}
+          onImportFile={handleImport}
+          importing={importing}
+        />
 
         {books.length > 0 && (
           <div className="mt-8">
