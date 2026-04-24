@@ -18,38 +18,38 @@ interface StepperProps {
 function Stepper({ label, value, onDec, onInc, disabled, labelColor, valueWidth, locked, onLockedClick }: StepperProps) {
   return (
     <div
-      className="flex flex-col items-center gap-1"
+      className="flex flex-col items-center gap-0.5 sm:gap-1"
       onClick={locked ? onLockedClick : undefined}
       style={{ cursor: locked ? 'pointer' : 'default' }}
     >
       <div
-        className="text-[10px] font-medium uppercase tracking-wide flex items-center gap-1"
+        className="text-[9px] sm:text-[10px] font-medium uppercase tracking-wide flex items-center gap-1"
         style={{ color: labelColor ?? 'var(--text-secondary)' }}
       >
         {label}
         {locked && (
           <span
-            className="text-[9px] px-1 rounded-sm"
+            className="text-[8px] px-1 rounded-sm"
             style={{ background: 'var(--accent)', color: 'white' }}
           >
             PRO
           </span>
         )}
       </div>
-      <div className="flex items-center gap-1.5" style={{ pointerEvents: locked ? 'none' : 'auto', opacity: locked ? 0.4 : 1 }}>
+      <div className="flex items-center gap-1 sm:gap-1.5" style={{ pointerEvents: locked ? 'none' : 'auto', opacity: locked ? 0.4 : 1 }}>
         <button
           onClick={onDec}
           disabled={disabled || locked}
-          className="w-9 h-9 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity text-lg font-bold disabled:opacity-30"
+          className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity text-base sm:text-lg font-bold disabled:opacity-30"
           style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
         >
           -
         </button>
         <div
-          className="text-sm font-mono text-center"
+          className="text-xs sm:text-sm font-mono text-center"
           style={{
             color: (disabled || locked) ? 'var(--text-secondary)' : 'var(--text-primary)',
-            minWidth: valueWidth ?? '3.5rem',
+            minWidth: valueWidth ?? '2.5rem',
           }}
         >
           {value}
@@ -57,7 +57,7 @@ function Stepper({ label, value, onDec, onInc, disabled, labelColor, valueWidth,
         <button
           onClick={onInc}
           disabled={disabled || locked}
-          className="w-9 h-9 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity text-lg font-bold disabled:opacity-30"
+          className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity text-base sm:text-lg font-bold disabled:opacity-30"
           style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
         >
           +
@@ -88,10 +88,10 @@ export default function PlaybackControls() {
 
   return (
     <div
-      className="flex flex-col items-center gap-3 py-3 px-2"
+      className="flex flex-col items-center gap-2 py-2 px-2"
       style={{ color: 'var(--text-primary)' }}
     >
-      <div className="flex items-center justify-center gap-6 flex-wrap">
+      <div className="flex items-center justify-center gap-2 sm:gap-6 flex-nowrap">
         {dialogueRule && (
           <Stepper
             label="Dialogue"

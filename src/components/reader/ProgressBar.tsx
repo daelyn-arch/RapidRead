@@ -20,7 +20,7 @@ export default function ProgressBar({ current, total, onSeek, chapterTitle, isPl
   };
 
   return (
-    <div className="px-4 pb-4">
+    <div className="px-4 pb-2">
       {/* Progress bar */}
       <div
         className="w-full h-2 rounded-full cursor-pointer"
@@ -36,16 +36,19 @@ export default function ProgressBar({ current, total, onSeek, chapterTitle, isPl
         />
       </div>
 
-      {/* Status line */}
+      {/* Status line — compact on mobile so both halves fit */}
       <div
-        className="flex justify-between items-center mt-2 text-xs"
+        className="flex justify-between items-center gap-2 mt-1.5 text-[10px] sm:text-xs"
         style={{ color: 'var(--text-secondary)' }}
       >
-        <span>{chapterTitle || ''}</span>
-        <span className="flex items-center gap-2">
-          <span>
+        <span className="truncate min-w-0">{chapterTitle || ''}</span>
+        <span className="flex items-center gap-2 shrink-0">
+          <span className="hidden sm:inline">
             {percent.toFixed(1)}% &middot; {current}/{total} words
             {minutesRemaining > 0 && ` · ~${minutesRemaining} min left`}
+          </span>
+          <span className="sm:hidden">
+            {percent.toFixed(0)}%{minutesRemaining > 0 && ` · ${minutesRemaining}m`}
           </span>
           {isPlaying !== undefined && (
             <span

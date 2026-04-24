@@ -32,7 +32,31 @@ export default function ReaderPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('rsvp');
   const [activeMenu, setActiveMenu] = useState<{ tokenIndex: number; rect: DOMRect } | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   const isPro = useIsPro();
+
+  // Toggle focus mode: hides header, controls, and progress bar so only
+  // the word (or page text) is visible. On browsers that support the
+  // Fullscreen API, also request true browser fullscreen for max effect.
+  const toggleFocusMode = useCallback(async () => {
+    const nextVal = !focusMode;
+    setFocusMode(nextVal);
+    try {
+      if (nextVal && document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen().catch(() => {});
+      } else if (!nextVal && document.fullscreenElement) {
+        await document.exitFullscreen().catch(() => {});
+      }
+    } catch { /* iOS Safari + some others don't support the API */ }
+  }, [focusMode]);
+
+  // Exit focus mode when the browser leaves fullscreen by any means
+  // (Esc, swipe, etc.) so our state stays in sync.
+  useEffect(() => {
+    const onFs = () => { if (!document.fullscreenElement) setFocusMode(false); };
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
 
   const { currentToken, currentTokenIndex, isPlaying, currentChapterIndex, tokens } = useReaderStore();
   const setBook = useReaderStore(s => s.setBook);
@@ -218,7 +242,7 @@ export default function ReaderPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" data-theme={theme}
+      <div className="flex items-center justify-center min-h-[100dvh]" data-theme={theme}
         style={{ backgroundColor: 'var(--bg-primary)' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Loading book...</p>
       </div>
@@ -227,7 +251,7 @@ export default function ReaderPage() {
 
   if (!bookMeta || chapters.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4" data-theme={theme}
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-4" data-theme={theme}
         style={{ backgroundColor: 'var(--bg-primary)' }}>
         <p style={{ color: 'var(--text-secondary)' }}>Book not found</p>
         <button onClick={() => navigate('/app')} style={{ color: 'var(--accent)' }}>
@@ -239,13 +263,13 @@ export default function ReaderPage() {
 
   return (
     <div
-      className="flex flex-col min-h-screen"
+      className="flex flex-col min-h-[100dvh] h-[100dvh] overflow-hidden"
       data-theme={theme}
       style={{ backgroundColor: 'var(--bg-primary)' }}
       onClick={() => viewMode === 'rsvp' && setControlsVisible(true)}
     >
-      {/* Header */}
-      <div
+      {/* Header — hidden entirely in focus mode */}
+      {!focusMode && <div
         className="safe-top flex items-center justify-between px-4 py-3 shrink-0 transition-opacity duration-300 sticky top-0 z-40"
         style={{
           opacity: controlsVisible ? 1 : 0,
@@ -316,6 +340,21 @@ export default function ReaderPage() {
             Contents
           </button>
 
+          {/* Focus mode toggle — hides everything except the word */}
+          <button
+            onClick={toggleFocusMode}
+            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--text-secondary)' }}
+            title="Focus mode"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="3 9 3 3 9 3" />
+              <polyline points="21 9 21 3 15 3" />
+              <polyline points="21 15 21 21 15 21" />
+              <polyline points="3 15 3 21 9 21" />
+            </svg>
+          </button>
+
           {/* Settings */}
           <button
             onClick={() => { saveProgress(); navigate('/app/settings'); }}
@@ -329,22 +368,42 @@ export default function ReaderPage() {
             </svg>
           </button>
         </div>
-      </div>
+      </div>}
 
-      {/* Main content area */}
-      {viewMode === 'rsvp' ? (
-        <RsvpDisplay token={currentToken} onTapToggle={playback.toggle} />
-      ) : (
-        <PageView
-          tokens={tokens}
-          currentIndex={currentTokenIndex}
-          onWordClick={handleWordClick}
-          onWordLongPress={handleWordLongPress}
-        />
+      {/* Focus-mode exit button — floats top-right while focused */}
+      {focusMode && (
+        <button
+          onClick={toggleFocusMode}
+          className="fixed top-3 right-3 p-2 rounded-full z-50 transition-opacity"
+          style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', opacity: 0.7 }}
+          title="Exit focus mode"
+          aria-label="Exit focus mode"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="4 14 10 14 10 20" />
+            <polyline points="20 10 14 10 14 4" />
+            <line x1="14" y1="10" x2="21" y2="3" />
+            <line x1="3" y1="21" x2="10" y2="14" />
+          </svg>
+        </button>
       )}
 
-      {/* Controls — always visible in page view, auto-hide in RSVP */}
-      <div
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {viewMode === 'rsvp' ? (
+          <RsvpDisplay token={currentToken} onTapToggle={playback.toggle} />
+        ) : (
+          <PageView
+            tokens={tokens}
+            currentIndex={currentTokenIndex}
+            onWordClick={handleWordClick}
+            onWordLongPress={handleWordLongPress}
+          />
+        )}
+      </div>
+
+      {/* Controls — hidden in focus mode; always visible in page view, auto-hide in RSVP */}
+      {!focusMode && <div
         className="safe-bottom shrink-0 transition-opacity duration-300"
         style={{
           opacity: controlsVisible ? 1 : 0,
@@ -359,7 +418,7 @@ export default function ReaderPage() {
           chapterTitle={chapters[currentChapterIndex]?.title}
           isPlaying={isPlaying}
         />
-      </div>
+      </div>}
 
       {/* Chapter navigation overlay */}
       {showChapterNav && bookId && (
