@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useBookImport } from '@/hooks/useBookImport';
@@ -7,9 +8,20 @@ import BookList from '@/components/library/BookList';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const { books, progress } = useLibraryStore();
   const theme = useSettingsStore(s => s.settings.theme);
   const { importFile, importing, error, clearError } = useBookImport();
+  const [verifiedBannerOpen, setVerifiedBannerOpen] = useState(() => params.get('verified') === '1');
+
+  function dismissVerifiedBanner() {
+    setVerifiedBannerOpen(false);
+    if (params.has('verified')) {
+      const next = new URLSearchParams(params);
+      next.delete('verified');
+      setParams(next, { replace: true });
+    }
+  }
 
   const handleImport = async (file: File) => {
     const meta = await importFile(file);
@@ -63,6 +75,26 @@ export default function LibraryPage() {
 
       {/* Content */}
       <main className="flex-1 p-6 max-w-5xl mx-auto w-full">
+        {verifiedBannerOpen && (
+          <div
+            className="mb-4 p-3 rounded-lg flex items-center justify-between"
+            style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}
+          >
+            <span className="text-sm">
+              ✓ Email verified. Welcome to RapidRead.
+            </span>
+            <button
+              onClick={dismissVerifiedBanner}
+              className="ml-2 hover:opacity-80"
+              aria-label="Dismiss"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        )}
         {error && (
           <div
             className="mb-4 p-3 rounded-lg flex items-center justify-between"

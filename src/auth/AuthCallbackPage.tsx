@@ -40,8 +40,15 @@ export default function AuthCallbackPage() {
     const timer = window.setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
       const next = readNextParam();
-      navigate(data.session ? next : '/login', { replace: true });
-    }, 50);
+      if (data.session) {
+        // Append ?verified=1 when landing on /app so the library can show a
+        // one-time "Email confirmed — welcome!" banner.
+        const sep = next.includes('?') ? '&' : '?';
+        navigate(`${next}${sep}verified=1`, { replace: true });
+      } else {
+        navigate('/login', { replace: true });
+      }
+    }, 100);
     return () => window.clearTimeout(timer);
   }, [navigate]);
 

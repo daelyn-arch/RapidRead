@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLibraryStore } from '@/store/libraryStore';
+import { useAuth } from '@/auth/useAuth';
 
 const DEMO_TEXT =
   "She scanned the words faster than she thought possible, as if the page itself were reading her. " +
@@ -88,11 +89,14 @@ const faqs = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const hasLocalBooks = useLibraryStore((s) => s.books.length > 0);
+  const { session } = useAuth();
 
   // Returning local user? Skip the marketing and jump into the app.
+  // Also skip the landing page if the user is already signed in — otherwise
+  // the post-email-verification redirect lands them here with no feedback.
   useEffect(() => {
-    if (hasLocalBooks) navigate('/app', { replace: true });
-  }, [hasLocalBooks, navigate]);
+    if (session || hasLocalBooks) navigate('/app', { replace: true });
+  }, [session, hasLocalBooks, navigate]);
 
   return (
     <div className="min-h-[100dvh] safe-top" style={{ color: 'var(--text-primary)' }}>
