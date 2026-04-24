@@ -51,21 +51,22 @@ export default function DialogueKaraoke({ tokens, block, currentIndex }: Props) 
           else color = dialogueColor;
 
           const opacity = isCurrent ? 1 : isRead ? 0.55 : 0.85;
-          const weight = isCurrent ? 700 : 400;
-          const scale = isCurrent ? 1.08 : 1;
           const spacing = i === 0 ? '' : ' ';
 
+          // Important: no font-weight or scale change on the active word —
+          // those reflow the line and make words jitter as the highlight
+          // moves. Use only color + opacity + a subtle background to pop
+          // the active word without shifting anything.
           return (
             <span
               key={absoluteIndex}
               style={{
                 color,
                 opacity,
-                fontWeight: weight,
-                display: 'inline-block',
-                transform: `scale(${scale})`,
-                transition: 'color 80ms ease-out, opacity 80ms ease-out, transform 80ms ease-out, font-weight 80ms ease-out',
-                margin: '0 1px',
+                background: isCurrent ? 'var(--bg-tertiary)' : 'transparent',
+                padding: '1px 4px',
+                borderRadius: 4,
+                transition: 'color 80ms ease-out, opacity 80ms ease-out, background 80ms ease-out',
               }}
             >
               {spacing}{t.word}

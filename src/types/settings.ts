@@ -31,7 +31,11 @@ export interface AppSettings {
   unfamiliarColor: string;
   autoBookmark: boolean;
   customKnownWords: string[];
-  /** Whether to render dialogue blocks in karaoke style instead of single-word RSVP. */
+  /**
+   * When true, dialogue blocks are rendered as a karaoke-style highlight on
+   * the full sentence instead of one-word-at-a-time RSVP. Opt-in — many
+   * readers prefer the consistency of single-word display.
+   */
   karaokeDialogue: boolean;
 }
 
@@ -48,5 +52,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   unfamiliarColor: '#fbbf24',
   autoBookmark: true,
   customKnownWords: [],
-  karaokeDialogue: true,
+  karaokeDialogue: false,
 };
