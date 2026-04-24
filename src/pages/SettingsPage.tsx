@@ -3,6 +3,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import SpeedProfileEditor from '@/components/settings/SpeedProfileEditor';
 import KnownWordManager from '@/components/settings/KnownWordManager';
 import ManageLibrary from '@/components/settings/ManageLibrary';
+import ProLock from '@/billing/ProLock';
 import type { ReadingFont, Theme } from '@/types/settings';
 
 const THEMES: { value: Theme; label: string }[] = [
@@ -241,68 +242,78 @@ export default function SettingsPage() {
             Reading
           </h3>
           <div className="space-y-3">
-            <div
-              className="flex items-center justify-between py-2 px-4 rounded-lg"
-              style={{ backgroundColor: 'var(--bg-secondary)' }}
+            <ProLock
+              paywallTitle="Karaoke dialogue is a Pro feature"
+              paywallDescription="Upgrade to see quoted lines as a running highlight instead of one word at a time. $0.99/month or $7.99/year."
             >
-              <div className="min-w-0 pr-4">
-                <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                  Karaoke dialogue mode
-                </div>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                  Show full dialogue blocks with a moving word highlight. Keeps the pacing but lets you see tone and sarcasm in context.
-                </p>
-              </div>
-              <button
-                onClick={() => setKaraokeDialogue(!karaokeDialogue)}
-                className="w-10 h-6 rounded-full relative transition-colors shrink-0"
-                style={{
-                  backgroundColor: karaokeDialogue ? 'var(--accent)' : 'var(--bg-tertiary)',
-                }}
-                aria-pressed={karaokeDialogue}
+              <div
+                className="flex items-center justify-between py-2 px-4 rounded-lg"
+                style={{ backgroundColor: 'var(--bg-secondary)' }}
               >
-                <div
-                  className="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform"
+                <div className="min-w-0 pr-4">
+                  <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                    Karaoke dialogue mode
+                  </div>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                    Show full dialogue blocks with a moving word highlight. Keeps the pacing but lets you see tone and sarcasm in context.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setKaraokeDialogue(!karaokeDialogue)}
+                  className="w-10 h-6 rounded-full relative transition-colors shrink-0"
                   style={{
-                    transform: karaokeDialogue ? 'translateX(20px)' : 'translateX(4px)',
+                    backgroundColor: karaokeDialogue ? 'var(--accent)' : 'var(--bg-tertiary)',
                   }}
-                />
-              </button>
-            </div>
+                  aria-pressed={karaokeDialogue}
+                >
+                  <div
+                    className="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform"
+                    style={{
+                      transform: karaokeDialogue ? 'translateX(20px)' : 'translateX(4px)',
+                    }}
+                  />
+                </button>
+              </div>
+            </ProLock>
 
             {/* Long word threshold */}
-            <div
-              className="flex items-center justify-between py-3 px-4 rounded-lg"
-              style={{ backgroundColor: 'var(--bg-secondary)' }}
+            <ProLock
+              paywallTitle="Long-word threshold is a Pro feature"
+              paywallDescription="Upgrade to customize which words count as 'long' and get slowed down. $0.99/month or $7.99/year."
             >
-              <div className="min-w-0 pr-4">
-                <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                  Long word threshold
+              <div
+                className="flex items-center justify-between py-3 px-4 rounded-lg"
+                style={{ backgroundColor: 'var(--bg-secondary)' }}
+              >
+                <div className="min-w-0 pr-4">
+                  <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                    Long word threshold
+                  </div>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                    Minimum character count for a word to be treated as "long" and slowed down.
+                  </p>
                 </div>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                  Minimum character count for a word to be treated as "long" and slowed down.
-                </p>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    onClick={() => setLongWordThreshold(longWordThreshold - 1)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                  >
+                    -
+                  </button>
+                  <span className="font-mono text-sm w-10 text-center" style={{ color: 'var(--text-primary)' }}>
+                    {longWordThreshold}+
+                  </span>
+                  <button
+                    onClick={() => setLongWordThreshold(longWordThreshold + 1)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={() => setLongWordThreshold(longWordThreshold - 1)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
-                  style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
-                >
-                  -
-                </button>
-                <span className="font-mono text-sm w-10 text-center" style={{ color: 'var(--text-primary)' }}>
-                  {longWordThreshold}+
-                </span>
-                <button
-                  onClick={() => setLongWordThreshold(longWordThreshold + 1)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
-                  style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
-                >
-                  +
-                </button>
-              </div>
-            </div>
+            </ProLock>
 
             {/* Reading font picker */}
             <div

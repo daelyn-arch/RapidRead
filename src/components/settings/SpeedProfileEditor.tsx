@@ -1,4 +1,5 @@
 import { useSettingsStore } from '@/store/settingsStore';
+import ProLock from '@/billing/ProLock';
 import SpeedRuleRow from './SpeedRuleRow';
 
 export default function SpeedProfileEditor() {
@@ -43,57 +44,67 @@ export default function SpeedProfileEditor() {
         </div>
       </div>
 
-      {/* Transition Duration */}
-      <div
-        className="flex items-center justify-between py-3 px-4 rounded-lg mb-4"
-        style={{ backgroundColor: 'var(--bg-secondary)' }}
+      {/* Transition Duration — Pro feature */}
+      <ProLock
+        paywallTitle="Transition rate is a Pro feature"
+        paywallDescription="Upgrade to tune how smoothly your speed ramps back to base after a slowdown. $0.99/month or $7.99/year."
       >
-        <div>
-          <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-            Transition Rate
+        <div
+          className="flex items-center justify-between py-3 px-4 rounded-lg mb-4"
+          style={{ backgroundColor: 'var(--bg-secondary)' }}
+        >
+          <div>
+            <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+              Transition Rate
+            </div>
+            <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              Time to ramp back to base speed after a context zone
+            </div>
           </div>
-          <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            Time to ramp back to base speed after a context zone
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setTransitionDuration(Math.max(0, Math.round((profile.transitionDuration - 0.05) * 100) / 100))}
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+              style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+            >
+              -
+            </button>
+            <span className="font-mono text-sm w-14 text-center" style={{ color: 'var(--text-primary)' }}>
+              {profile.transitionDuration.toFixed(2)}s
+            </span>
+            <button
+              onClick={() => setTransitionDuration(Math.round((profile.transitionDuration + 0.05) * 100) / 100)}
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+              style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+            >
+              +
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setTransitionDuration(Math.max(0, Math.round((profile.transitionDuration - 0.05) * 100) / 100))}
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
-            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
-          >
-            -
-          </button>
-          <span className="font-mono text-sm w-14 text-center" style={{ color: 'var(--text-primary)' }}>
-            {profile.transitionDuration.toFixed(2)}s
-          </span>
-          <button
-            onClick={() => setTransitionDuration(Math.round((profile.transitionDuration + 0.05) * 100) / 100)}
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
-            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
-          >
-            +
-          </button>
-        </div>
-      </div>
+      </ProLock>
 
-      {/* Speed Rules */}
+      {/* Speed Rules — Pro feature (entire block) */}
       <h4
         className="text-sm font-medium mb-2"
         style={{ color: 'var(--text-secondary)' }}
       >
         Context Speed Rules
       </h4>
-      <div className="space-y-2">
-        {profile.rules.map(rule => (
-          <SpeedRuleRow
-            key={rule.id}
-            rule={rule}
-            onToggle={() => toggleRule(profile.id, rule.id)}
-            onWpmChange={(wpm) => setRuleWpm(profile.id, rule.id, wpm)}
-          />
-        ))}
-      </div>
+      <ProLock
+        paywallTitle="Context-aware speed is a Pro feature"
+        paywallDescription="Upgrade to let RapidRead slow down for dialogue, unfamiliar words, sentence ends, and more. $0.99/month or $7.99/year."
+      >
+        <div className="space-y-2">
+          {profile.rules.map(rule => (
+            <SpeedRuleRow
+              key={rule.id}
+              rule={rule}
+              onToggle={() => toggleRule(profile.id, rule.id)}
+              onWpmChange={(wpm) => setRuleWpm(profile.id, rule.id, wpm)}
+            />
+          ))}
+        </div>
+      </ProLock>
     </div>
   );
 }
