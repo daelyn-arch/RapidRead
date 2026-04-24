@@ -263,9 +263,12 @@ export default function ReaderPage() {
 
   return (
     <div
-      className="safe-top flex flex-col min-h-[100dvh] h-[100dvh] overflow-hidden"
+      className="flex flex-col min-h-[100dvh] h-[100dvh] overflow-hidden"
       data-theme={theme}
-      style={{ backgroundColor: 'var(--bg-primary)' }}
+      style={{
+        backgroundColor: 'var(--bg-primary)',
+        paddingTop: 'env(safe-area-inset-top)',
+      }}
       onClick={() => viewMode === 'rsvp' && setControlsVisible(true)}
     >
       {/* Header — hidden entirely in focus mode */}
@@ -343,12 +346,19 @@ export default function ReaderPage() {
         </div>
       </div>}
 
-      {/* Focus-mode exit button — floats top-right while focused */}
+      {/* Focus-mode exit button — floats top-right while focused.
+          Uses calc(safe-area-inset-top + 0.75rem) so it doesn't slip
+          under the iPhone status bar / notch when installed to Home Screen. */}
       {focusMode && (
         <button
           onClick={toggleFocusMode}
-          className="fixed top-3 right-3 p-2 rounded-full z-50 transition-opacity"
-          style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', opacity: 0.7 }}
+          className="fixed right-3 p-2 rounded-full z-50 transition-opacity"
+          style={{
+            top: 'calc(env(safe-area-inset-top) + 0.75rem)',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-secondary)',
+            opacity: 0.7,
+          }}
           title="Exit focus mode"
           aria-label="Exit focus mode"
         >
