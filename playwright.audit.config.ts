@@ -13,7 +13,7 @@ dotenv.config({ path: '.env.local' });
  */
 export default defineConfig({
   testDir: './tests',
-  testMatch: /audit\.spec\.ts$/,
+  testMatch: /(audit|features)\.spec\.ts$/,
   timeout: 60000,
   retries: 0,
   reporter: [['list']],

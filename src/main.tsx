@@ -14,6 +14,14 @@ import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'
 
 import App from './App'
+import { useReaderStore } from '@/store/readerStore'
+
+// Expose the reader store on window so end-to-end tests can introspect
+// tokens and dialogue blocks and seek deterministically. No sensitive
+// data here — everything is already visible in the DOM.
+if (typeof window !== 'undefined') {
+  (window as unknown as { __rapidread?: unknown }).__rapidread = { readerStore: useReaderStore }
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
