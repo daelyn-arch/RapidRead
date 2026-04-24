@@ -4,7 +4,7 @@ import SpeedRuleRow from './SpeedRuleRow';
 
 export default function SpeedProfileEditor() {
   const profile = useSettingsStore(s => s.getActiveProfile)();
-  const { setBaseWpm, setTransitionDuration, toggleRule, setRuleWpm } = useSettingsStore();
+  const { setBaseWpm, setTransitionStep, toggleRule, setRuleWpm } = useSettingsStore();
 
   return (
     <div>
@@ -55,25 +55,25 @@ export default function SpeedProfileEditor() {
         >
           <div>
             <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-              Transition Rate
+              Transition Step
             </div>
             <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              Time to ramp back to base speed after a context zone
+              WPM added per word ramping back to base after a slowdown. 0 disables the ramp.
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setTransitionDuration(Math.max(0, Math.round((profile.transitionDuration - 0.05) * 100) / 100))}
+              onClick={() => setTransitionStep(profile.transitionStep - 5)}
               className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
               style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
             >
               -
             </button>
-            <span className="font-mono text-sm w-14 text-center" style={{ color: 'var(--text-primary)' }}>
-              {profile.transitionDuration.toFixed(2)}s
+            <span className="font-mono text-sm w-20 text-center" style={{ color: 'var(--text-primary)' }}>
+              +{profile.transitionStep} wpm
             </span>
             <button
-              onClick={() => setTransitionDuration(Math.round((profile.transitionDuration + 0.05) * 100) / 100)}
+              onClick={() => setTransitionStep(profile.transitionStep + 5)}
               className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
               style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
             >

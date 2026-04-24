@@ -29,7 +29,11 @@ export interface SpeedProfile {
   id: string;
   name: string;
   baseWpm: number;
-  transitionDuration: number; // seconds to ramp from rule WPM back to base WPM
+  /** Legacy — seconds to ramp back to base. Replaced by transitionStep. */
+  transitionDuration: number;
+  /** WPM to add to the effective speed for each word after a context zone,
+   *  until reaching base WPM. 0 disables the ramp (instant snap). */
+  transitionStep: number;
   rules: SpeedRule[];
 }
 
@@ -47,5 +51,6 @@ export const DEFAULT_PROFILE: SpeedProfile = {
   name: 'Default',
   baseWpm: 300,
   transitionDuration: 0,
+  transitionStep: 25,
   rules: DEFAULT_RULES,
 };

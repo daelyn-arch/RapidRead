@@ -15,9 +15,10 @@ export class PlaybackController {
   private profile: SpeedProfile;
   private listener: PlaybackListener;
 
-  // Transition state
-  private transitionFromWpm: number | null = null;
-  private transitionStartTime: number | null = null;
+  // Transition state — per-word step model.
+  // rampedWpm is the current effective speed during a ramp back to base.
+  // null means "not ramping, just use baseWpm for no-rule words".
+  private rampedWpm: number | null = null;
 
   constructor(profile: SpeedProfile, listener: PlaybackListener) {
     this.profile = profile;
@@ -103,45 +104,33 @@ export class PlaybackController {
   }
 
   private resetTransition() {
-    this.transitionFromWpm = null;
-    this.transitionStartTime = null;
+    this.rampedWpm = null;
   }
 
   private getEffectiveWpm(token: WordToken): number {
     const ruleWpm = getRuleWpm(token, this.profile);
+    const { baseWpm, transitionStep } = this.profile;
 
     if (ruleWpm !== null) {
-      // A rule matches — use rule WPM, and track it for transition
-      this.transitionFromWpm = ruleWpm;
-      this.transitionStartTime = null; // reset transition clock
+      // A rule matched. Use its WPM.
+      // Seed the ramp with rule WPM *only* if the rule is slower than base
+      // — if the rule is faster than base, there's nothing to ramp toward,
+      // we'll just snap back to base on the next non-rule word.
+      this.rampedWpm = ruleWpm < baseWpm ? ruleWpm : null;
       return ruleWpm;
     }
 
-    // No rule matches — check if we need to transition back to base
-    const { baseWpm, transitionDuration } = this.profile;
-
-    if (this.transitionFromWpm !== null && transitionDuration > 0) {
-      // Start transition clock if not started
-      if (this.transitionStartTime === null) {
-        this.transitionStartTime = Date.now();
-      }
-
-      const elapsed = (Date.now() - this.transitionStartTime) / 1000;
-      const progress = Math.min(elapsed / transitionDuration, 1);
-
-      if (progress >= 1) {
-        // Transition complete
-        this.resetTransition();
-        return baseWpm;
-      }
-
-      // Ease: linear interpolation from rule WPM to base WPM
-      return this.transitionFromWpm + (baseWpm - this.transitionFromWpm) * progress;
+    // No rule. Decide between ramping and straight base-WPM.
+    if (this.rampedWpm === null || transitionStep <= 0) {
+      // Not ramping (or transition disabled) — just base speed.
+      this.rampedWpm = null;
+      return baseWpm;
     }
 
-    // No transition needed
-    this.resetTransition();
-    return baseWpm;
+    // Ramping: bump current WPM by the per-word step, clamp to base.
+    const next = Math.min(this.rampedWpm + transitionStep, baseWpm);
+    this.rampedWpm = next >= baseWpm ? null : next;
+    return next;
   }
 
   private scheduleNext() {

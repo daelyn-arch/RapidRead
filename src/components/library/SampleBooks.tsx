@@ -8,9 +8,10 @@ interface Sample {
 }
 
 const SAMPLES: Sample[] = [
-  { file: 'alice.epub',             title: "Alice's Adventures in Wonderland", author: 'Lewis Carroll',     note: '~28k words · 1.5h at 300 wpm' },
-  { file: 'metamorphosis.epub',     title: 'The Metamorphosis',                author: 'Franz Kafka',       note: '~22k words · 1h at 300 wpm' },
-  { file: 'pride-and-prejudice.epub', title: 'Pride and Prejudice',             author: 'Jane Austen',       note: '~120k words · 7h at 300 wpm' },
+  { file: 'alice.epub',               title: "Alice's Adventures in Wonderland", author: 'Lewis Carroll',     note: '~28k words · 1.5h at 300 wpm' },
+  { file: 'metamorphosis.epub',       title: 'The Metamorphosis',                author: 'Franz Kafka',       note: '~22k words · 1h at 300 wpm' },
+  { file: 'shunned-house.epub',       title: 'The Shunned House',                author: 'H. P. Lovecraft',   note: '~12k words · 40m at 300 wpm' },
+  { file: 'pride-and-prejudice.epub', title: 'Pride and Prejudice',              author: 'Jane Austen',       note: '~120k words · 7h at 300 wpm' },
 ];
 
 interface Props {
@@ -52,7 +53,7 @@ export default function SampleBooks({ onImportFile, importing }: Props) {
           Public domain · Project Gutenberg
         </span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
         {SAMPLES.map(s => {
           const isLoading = loading === s.file;
           return (

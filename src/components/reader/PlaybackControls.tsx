@@ -71,7 +71,7 @@ export default function PlaybackControls() {
   const profile = useSettingsStore(s => s.getActiveProfile)();
   const setBaseWpm = useSettingsStore(s => s.setBaseWpm);
   const setRuleWpm = useSettingsStore(s => s.setRuleWpm);
-  const setTransitionDuration = useSettingsStore(s => s.setTransitionDuration);
+  const setTransitionStep = useSettingsStore(s => s.setTransitionStep);
   const dialogueColor = useSettingsStore(s => s.settings.dialogueColor);
   const unfamiliarColor = useSettingsStore(s => s.settings.unfamiliarColor);
   const isPro = useIsPro();
@@ -80,9 +80,9 @@ export default function PlaybackControls() {
   const dialogueRule = profile.rules.find(r => r.id === 'dialogue');
   const unfamiliarRule = profile.rules.find(r => r.id === 'unfamiliar');
 
-  const transitionValue = profile.transitionDuration.toFixed(2) + 's';
+  const transitionValue = `+${profile.transitionStep}`;
   const stepTransition = (delta: number) =>
-    setTransitionDuration(Math.max(0, Math.round((profile.transitionDuration + delta) * 100) / 100));
+    setTransitionStep(profile.transitionStep + delta);
 
   const openPaywall = () => setPaywallOpen(true);
 
@@ -125,8 +125,8 @@ export default function PlaybackControls() {
         <Stepper
           label="Transition"
           value={transitionValue}
-          onDec={() => stepTransition(-0.05)}
-          onInc={() => stepTransition(0.05)}
+          onDec={() => stepTransition(-5)}
+          onInc={() => stepTransition(5)}
           valueWidth="3rem"
           locked={!isPro}
           onLockedClick={openPaywall}

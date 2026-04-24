@@ -10,6 +10,7 @@ interface SettingsState {
   getActiveProfile: () => SpeedProfile;
   setBaseWpm: (wpm: number) => void;
   setTransitionDuration: (seconds: number) => void;
+  setTransitionStep: (wpmPerWord: number) => void;
   updateRule: (profileId: string, ruleId: string, updates: Partial<SpeedRule>) => void;
   toggleRule: (profileId: string, ruleId: string) => void;
   setRuleWpm: (profileId: string, ruleId: string, wpm: number) => void;
@@ -55,6 +56,17 @@ export const useSettingsStore = create<SettingsState>()(
           profiles: state.settings.profiles.map(p =>
             p.id === state.settings.activeProfileId
               ? { ...p, transitionDuration: Math.max(0, Math.min(10, seconds)) }
+              : p
+          ),
+        },
+      })),
+
+      setTransitionStep: (wpmPerWord: number) => set(state => ({
+        settings: {
+          ...state.settings,
+          profiles: state.settings.profiles.map(p =>
+            p.id === state.settings.activeProfileId
+              ? { ...p, transitionStep: Math.max(0, Math.min(500, Math.round(wpmPerWord))) }
               : p
           ),
         },
@@ -171,7 +183,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'rapidread-settings',
-      version: 2,
+      version: 3,
       migrate: (persisted: unknown) => {
         const state = persisted as { settings?: AppSettings };
         if (state?.settings) {
@@ -186,6 +198,9 @@ export const useSettingsStore = create<SettingsState>()(
             // Migrate old modifier-based rules to wpm-based
             if (profile.transitionDuration === undefined) {
               profile.transitionDuration = 0;
+            }
+            if (profile.transitionStep === undefined) {
+              profile.transitionStep = 25;
             }
             for (const rule of profile.rules) {
               if ((rule as unknown as { modifier?: number }).modifier !== undefined && rule.wpm === undefined) {
