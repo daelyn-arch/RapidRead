@@ -18,7 +18,7 @@ interface AuthContextValue {
   loading: boolean;
   configured: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: string | null; alreadyExists?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -115,12 +115,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const emailRedirectTo = typeof window !== 'undefined'
         ? `${window.location.origin}/auth/callback`
         : undefined;
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: emailRedirectTo ? { emailRedirectTo } : undefined,
       });
-      return { error: error?.message ?? null };
+      if (error) return { error: error.message, alreadyExists: false };
+      // Supabase deliberately doesn't expose a "user already exists" error
+      // (that would leak account existence to anyone who tries). Instead the
+      // returned user has an empty identities array when the email is
+      // already registered — detect and surface it ourselves.
+      const alreadyExists = !!data.user
+        && Array.isArray(data.user.identities)
+        && data.user.identities.length === 0;
+      return { error: null, alreadyExists };
     },
     async signOut() {
       await supabase.auth.signOut();

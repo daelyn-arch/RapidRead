@@ -57,21 +57,28 @@ export default function LoginPage({ initialMode = 'signin' }: { initialMode?: Mo
     e.preventDefault();
     setError(null);
     setBusy(true);
-    const fn = mode === 'signin' ? signIn : signUp;
-    const { error } = await fn(email, password);
-    setBusy(false);
-    if (error) {
-      setError(error);
+    if (mode === 'signin') {
+      const { error } = await signIn(email, password);
+      setBusy(false);
+      if (error) { setError(error); return; }
+      navigate(next, { replace: true });
       return;
     }
-    if (mode === 'signup') {
-      // With email confirmation enabled, signUp resolves but no session is
-      // created until the user clicks the verification link. Detect that.
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setPendingVerification(email);
-        return;
-      }
+    // signup
+    const { error, alreadyExists } = await signUp(email, password);
+    setBusy(false);
+    if (error) { setError(error); return; }
+    if (alreadyExists) {
+      setError('An account with that email already exists. Please sign in.');
+      setMode('signin');
+      return;
+    }
+    // With email confirmation enabled, signUp resolves but no session is
+    // created until the user clicks the verification link.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setPendingVerification(email);
+      return;
     }
     navigate(next, { replace: true });
   }
