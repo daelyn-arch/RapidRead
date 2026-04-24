@@ -37,6 +37,8 @@ export interface AppSettings {
    * readers prefer the consistency of single-word display.
    */
   karaokeDialogue: boolean;
+  /** Minimum character count for a word to be treated as a "long word". */
+  longWordThreshold: number;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -53,4 +55,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoBookmark: true,
   customKnownWords: [],
   karaokeDialogue: false,
+  longWordThreshold: 9,
 };

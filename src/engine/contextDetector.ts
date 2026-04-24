@@ -29,6 +29,6 @@ export function hasTrailingPunctuation(word: string): boolean {
   return TRAILING_PUNCT.has(lastChar);
 }
 
-export function isLongWord(word: string): boolean {
-  return stripPunctuation(word).length >= 9;
+export function isLongWord(word: string, threshold = 9): boolean {
+  return stripPunctuation(word).length >= threshold;
 }

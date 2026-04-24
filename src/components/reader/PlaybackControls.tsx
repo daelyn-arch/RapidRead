@@ -1,20 +1,16 @@
 import { useSettingsStore } from '@/store/settingsStore';
 
-interface Props {
-  isPlaying: boolean;
-  onToggle: () => void;
-}
-
-interface WpmStepperProps {
+interface StepperProps {
   label: string;
-  value: number;
+  value: string;
   onDec: () => void;
   onInc: () => void;
   disabled?: boolean;
   labelColor?: string;
+  valueWidth?: string;
 }
 
-function WpmStepper({ label, value, onDec, onInc, disabled, labelColor }: WpmStepperProps) {
+function Stepper({ label, value, onDec, onInc, disabled, labelColor, valueWidth }: StepperProps) {
   return (
     <div className="flex flex-col items-center gap-1">
       <div
@@ -33,8 +29,11 @@ function WpmStepper({ label, value, onDec, onInc, disabled, labelColor }: WpmSte
           -
         </button>
         <div
-          className="text-sm font-mono text-center min-w-14"
-          style={{ color: disabled ? 'var(--text-secondary)' : 'var(--text-primary)' }}
+          className="text-sm font-mono text-center"
+          style={{
+            color: disabled ? 'var(--text-secondary)' : 'var(--text-primary)',
+            minWidth: valueWidth ?? '3.5rem',
+          }}
         >
           {value}
         </div>
@@ -51,15 +50,20 @@ function WpmStepper({ label, value, onDec, onInc, disabled, labelColor }: WpmSte
   );
 }
 
-export default function PlaybackControls({ isPlaying, onToggle }: Props) {
+export default function PlaybackControls() {
   const profile = useSettingsStore(s => s.getActiveProfile)();
   const setBaseWpm = useSettingsStore(s => s.setBaseWpm);
   const setRuleWpm = useSettingsStore(s => s.setRuleWpm);
+  const setTransitionDuration = useSettingsStore(s => s.setTransitionDuration);
   const dialogueColor = useSettingsStore(s => s.settings.dialogueColor);
   const unfamiliarColor = useSettingsStore(s => s.settings.unfamiliarColor);
 
   const dialogueRule = profile.rules.find(r => r.id === 'dialogue');
   const unfamiliarRule = profile.rules.find(r => r.id === 'unfamiliar');
+
+  const transitionValue = profile.transitionDuration.toFixed(2) + 's';
+  const stepTransition = (delta: number) =>
+    setTransitionDuration(Math.max(0, Math.round((profile.transitionDuration + delta) * 100) / 100));
 
   return (
     <div
@@ -68,51 +72,39 @@ export default function PlaybackControls({ isPlaying, onToggle }: Props) {
     >
       <div className="flex items-center justify-center gap-6 flex-wrap">
         {dialogueRule && (
-          <WpmStepper
+          <Stepper
             label="Dialogue"
-            value={dialogueRule.wpm}
+            value={String(dialogueRule.wpm)}
             onDec={() => setRuleWpm(profile.id, dialogueRule.id, dialogueRule.wpm - 25)}
             onInc={() => setRuleWpm(profile.id, dialogueRule.id, dialogueRule.wpm + 25)}
             disabled={!dialogueRule.enabled}
             labelColor={dialogueColor}
           />
         )}
-        <WpmStepper
+        <Stepper
           label="Base"
-          value={profile.baseWpm}
+          value={String(profile.baseWpm)}
           onDec={() => setBaseWpm(profile.baseWpm - 25)}
           onInc={() => setBaseWpm(profile.baseWpm + 25)}
         />
         {unfamiliarRule && (
-          <WpmStepper
+          <Stepper
             label="Unfamiliar"
-            value={unfamiliarRule.wpm}
+            value={String(unfamiliarRule.wpm)}
             onDec={() => setRuleWpm(profile.id, unfamiliarRule.id, unfamiliarRule.wpm - 25)}
             onInc={() => setRuleWpm(profile.id, unfamiliarRule.id, unfamiliarRule.wpm + 25)}
             disabled={!unfamiliarRule.enabled}
             labelColor={unfamiliarColor}
           />
         )}
+        <Stepper
+          label="Transition"
+          value={transitionValue}
+          onDec={() => stepTransition(-0.05)}
+          onInc={() => stepTransition(0.05)}
+          valueWidth="3rem"
+        />
       </div>
-
-      <button
-        onClick={onToggle}
-        className="p-4 rounded-full transition-opacity hover:opacity-80"
-        style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
-        title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
-        aria-label={isPlaying ? 'Pause' : 'Play'}
-      >
-        {isPlaying ? (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="6" y="4" width="4" height="16" />
-            <rect x="14" y="4" width="4" height="16" />
-          </svg>
-        ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21" />
-          </svg>
-        )}
-      </button>
     </div>
   );
 }

@@ -14,6 +14,7 @@ export function tokenize(
   globalOffset: number,
   dictionary: Set<string> | null,
   customKnownWords: string[],
+  longWordThreshold = 9,
 ): WordToken[] {
   const knownSet = new Set(customKnownWords.map(w => w.toLowerCase()));
   const paragraphs = text.split(/\n\s*\n/);
@@ -45,7 +46,7 @@ export function tokenize(
         isUnfamiliar,
         isParagraphStart: i === 0 && tokens.length > 0,
         isSentenceEnd: isSentenceEnd(word),
-        isLongWord: isLongWord(word),
+        isLongWord: isLongWord(word, longWordThreshold),
         hasTrailingPunctuation: hasTrailingPunctuation(word),
       };
 

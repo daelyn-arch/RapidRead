@@ -1,4 +1,5 @@
 import type { SpeedRule } from '@/types/rsvp';
+import { useSettingsStore } from '@/store/settingsStore';
 
 interface Props {
   rule: SpeedRule;
@@ -7,6 +8,19 @@ interface Props {
 }
 
 export default function SpeedRuleRow({ rule, onToggle, onWpmChange }: Props) {
+  const dialogueColor = useSettingsStore(s => s.settings.dialogueColor);
+  const unfamiliarColor = useSettingsStore(s => s.settings.unfamiliarColor);
+  const longWordThreshold = useSettingsStore(s => s.settings.longWordThreshold);
+
+  let labelColor: string = 'var(--text-primary)';
+  if (rule.id === 'dialogue') labelColor = dialogueColor;
+  else if (rule.id === 'unfamiliar') labelColor = unfamiliarColor;
+
+  // Long-word rule name reflects the live threshold (e.g. "Long Word (9+)")
+  const displayName = rule.id === 'long-word'
+    ? `Long Word (${longWordThreshold}+)`
+    : rule.name;
+
   return (
     <div
       className="flex items-center justify-between py-3 px-4 rounded-lg"
@@ -27,8 +41,8 @@ export default function SpeedRuleRow({ rule, onToggle, onWpmChange }: Props) {
             }}
           />
         </button>
-        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-          {rule.name}
+        <div className="text-sm font-medium" style={{ color: labelColor }}>
+          {displayName}
         </div>
       </div>
 

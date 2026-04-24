@@ -17,6 +17,7 @@ interface SettingsState {
   setFontSize: (size: number) => void;
   setReadingFont: (font: ReadingFont) => void;
   setKaraokeDialogue: (enabled: boolean) => void;
+  setLongWordThreshold: (n: number) => void;
   setOrpColor: (color: string) => void;
   setDialogueColor: (color: string) => void;
   setUnfamiliarColor: (color: string) => void;
@@ -108,6 +109,10 @@ export const useSettingsStore = create<SettingsState>()(
         settings: { ...state.settings, karaokeDialogue: enabled },
       })),
 
+      setLongWordThreshold: (n: number) => set(state => ({
+        settings: { ...state.settings, longWordThreshold: Math.max(4, Math.min(20, Math.round(n))) },
+      })),
+
       setOrpColor: (color: string) => set(state => ({
         settings: { ...state.settings, orpColor: color },
       })),
@@ -172,8 +177,9 @@ export const useSettingsStore = create<SettingsState>()(
         if (state?.settings) {
           if (state.settings.dialogueColor === undefined) state.settings.dialogueColor = '#60a5fa';
           if (state.settings.unfamiliarColor === undefined) state.settings.unfamiliarColor = '#fbbf24';
-          if (state.settings.karaokeDialogue === undefined) state.settings.karaokeDialogue = true;
+          if (state.settings.karaokeDialogue === undefined) state.settings.karaokeDialogue = false;
           if (state.settings.readingFont === undefined) state.settings.readingFont = 'system';
+          if (state.settings.longWordThreshold === undefined) state.settings.longWordThreshold = 9;
         }
         if (state?.settings?.profiles) {
           for (const profile of state.settings.profiles) {

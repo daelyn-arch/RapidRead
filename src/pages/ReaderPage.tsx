@@ -101,12 +101,13 @@ export default function ReaderPage() {
           setChapter(startChapter);
 
           const dictionary = getDictionary();
-          const words = useSettingsStore.getState().settings.customKnownWords;
+          const settings = useSettingsStore.getState().settings;
           const chapterTokens = tokenize(
             content[startChapter].rawText,
             content[startChapter].startWordIndex,
             dictionary,
-            words,
+            settings.customKnownWords,
+            settings.longWordThreshold,
           );
           setTokens(chapterTokens);
 
@@ -132,12 +133,13 @@ export default function ReaderPage() {
     saveProgress();
     setChapter(index);
     const dictionary = getDictionary();
-    const words = useSettingsStore.getState().settings.customKnownWords;
+    const settings = useSettingsStore.getState().settings;
     const chapterTokens = tokenize(
       chapters[index].rawText,
       chapters[index].startWordIndex,
       dictionary,
-      words,
+      settings.customKnownWords,
+      settings.longWordThreshold,
     );
     setTokens(chapterTokens);
   }, [chapters, setChapter, setTokens, saveProgress]);
@@ -340,15 +342,13 @@ export default function ReaderPage() {
           pointerEvents: controlsVisible ? 'auto' : 'none',
         }}
       >
-        <PlaybackControls
-          isPlaying={isPlaying}
-          onToggle={playback.toggle}
-        />
+        <PlaybackControls />
         <ProgressBar
           current={currentTokenIndex}
           total={tokens.length}
           onSeek={playback.seekTo}
           chapterTitle={chapters[currentChapterIndex]?.title}
+          isPlaying={isPlaying}
         />
       </div>
 

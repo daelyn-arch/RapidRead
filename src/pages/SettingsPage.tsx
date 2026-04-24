@@ -72,8 +72,8 @@ function ColorGrid({ label, value, onChange, disabled }: ColorGridProps) {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { theme, fontSize, fontFamily, readingFont, showORP, orpColor, dialogueColor, unfamiliarColor, karaokeDialogue } = useSettingsStore(s => s.settings);
-  const { setTheme, setFontSize, setReadingFont, setOrpColor, setDialogueColor, setUnfamiliarColor, setKaraokeDialogue } = useSettingsStore();
+  const { theme, fontSize, fontFamily, readingFont, showORP, orpColor, dialogueColor, unfamiliarColor, karaokeDialogue, longWordThreshold } = useSettingsStore(s => s.settings);
+  const { setTheme, setFontSize, setReadingFont, setOrpColor, setDialogueColor, setUnfamiliarColor, setKaraokeDialogue, setLongWordThreshold } = useSettingsStore();
   const toggleORP = () => useSettingsStore.setState(s => ({ settings: { ...s.settings, showORP: !s.settings.showORP } }));
 
   return (
@@ -268,6 +268,40 @@ export default function SettingsPage() {
                   }}
                 />
               </button>
+            </div>
+
+            {/* Long word threshold */}
+            <div
+              className="flex items-center justify-between py-3 px-4 rounded-lg"
+              style={{ backgroundColor: 'var(--bg-secondary)' }}
+            >
+              <div className="min-w-0 pr-4">
+                <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                  Long word threshold
+                </div>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                  Minimum character count for a word to be treated as "long" and slowed down.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={() => setLongWordThreshold(longWordThreshold - 1)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+                  style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                >
+                  -
+                </button>
+                <span className="font-mono text-sm w-10 text-center" style={{ color: 'var(--text-primary)' }}>
+                  {longWordThreshold}+
+                </span>
+                <button
+                  onClick={() => setLongWordThreshold(longWordThreshold + 1)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold"
+                  style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             {/* Reading font picker */}

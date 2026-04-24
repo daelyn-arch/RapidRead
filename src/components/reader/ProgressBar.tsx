@@ -3,9 +3,10 @@ interface Props {
   total: number;
   onSeek: (index: number) => void;
   chapterTitle?: string;
+  isPlaying?: boolean;
 }
 
-export default function ProgressBar({ current, total, onSeek, chapterTitle }: Props) {
+export default function ProgressBar({ current, total, onSeek, chapterTitle, isPlaying }: Props) {
   const percent = total > 0 ? (current / total) * 100 : 0;
   const wordsRemaining = total - current;
   // Rough estimate at 300 WPM
@@ -41,9 +42,19 @@ export default function ProgressBar({ current, total, onSeek, chapterTitle }: Pr
         style={{ color: 'var(--text-secondary)' }}
       >
         <span>{chapterTitle || ''}</span>
-        <span>
-          {percent.toFixed(1)}% &middot; {current}/{total} words
-          {minutesRemaining > 0 && ` \u00B7 ~${minutesRemaining} min left`}
+        <span className="flex items-center gap-2">
+          <span>
+            {percent.toFixed(1)}% &middot; {current}/{total} words
+            {minutesRemaining > 0 && ` · ~${minutesRemaining} min left`}
+          </span>
+          {isPlaying !== undefined && (
+            <span
+              className="font-semibold uppercase tracking-wide"
+              style={{ color: 'var(--accent)' }}
+            >
+              {isPlaying ? 'Reading' : 'Paused'}
+            </span>
+          )}
         </span>
       </div>
     </div>
