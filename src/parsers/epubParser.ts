@@ -2,6 +2,51 @@ import ePub from 'epubjs';
 import type { BookData, Chapter } from '@/types/book';
 
 /**
+ * Downscale + re-encode an EPUB cover blob as a JPEG data URL. EPUBs
+ * regularly ship 3-5MB hi-res JPEG covers; library cards display them
+ * at ~150px wide, so a 600px-max thumbnail is plenty.
+ *
+ * Returns null on any failure (canvas unsupported, image decode error,
+ * etc.) so the caller can simply omit the cover.
+ */
+async function compressCoverToDataUrl(blobUrl: string): Promise<string | null> {
+  const img = await new Promise<HTMLImageElement | null>((resolve) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => resolve(null);
+    i.src = blobUrl;
+  });
+  if (!img) return null;
+
+  const MAX_DIM = 600;
+  const ratio = Math.min(MAX_DIM / img.width, MAX_DIM / img.height, 1);
+  const w = Math.max(1, Math.round(img.width * ratio));
+  const h = Math.max(1, Math.round(img.height * ratio));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const out = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.82);
+  });
+  if (!out) return null;
+  // Belt-and-suspenders cap. A 600px JPEG at quality 0.82 is typically
+  // 30-100 KB; if something explodes past 500 KB drop it.
+  if (out.size > 500 * 1024) return null;
+
+  return await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(out);
+  });
+}
+
+/**
  * Normalize an EPUB href for matching. Strips query/hash and any leading
  * path segments so `OEBPS/chapter-03.xhtml` matches `chapter-03.xhtml`.
  */
@@ -112,27 +157,16 @@ export async function readEpubFile(file: File): Promise<BookData> {
   try {
     const blobUrl = await book.coverUrl();
     if (blobUrl) {
-      // epubjs returns a blob: URL that's only valid for the current
-      // page lifetime. Convert to a data URL so the cover survives
-      // reloads and round-trips through cloud sync.
-      const res = await fetch(blobUrl);
-      const blob = await res.blob();
-      // Cap at ~800KB raw to prevent multi-MB covers (some EPUBs ship
-      // 4-5MB hi-res JPEGs) from bloating the books row + every
-      // listCloudBooks payload. Drop the cover entirely if oversized.
-      const MAX_COVER_BYTES = 800 * 1024;
-      if (blob.size > MAX_COVER_BYTES) {
-        URL.revokeObjectURL(blobUrl);
-      } else {
-        const dataUrl: string = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(blob);
-        });
-        bookData.meta.coverUrl = dataUrl;
-        URL.revokeObjectURL(blobUrl);
-      }
+      // epubjs returns a blob: URL valid only for the current page
+      // lifetime. Compress + downscale to a thumbnail JPEG and store
+      // as a data URL so the cover (a) survives reloads, (b)
+      // round-trips through cloud sync, (c) doesn't bloat the books
+      // row. EPUBs commonly ship 3-5MB hi-res cover JPEGs; an earlier
+      // version bypassed this and shipped the raw blob, which caused
+      // 30+ MB cover bandwidth per sign-in for affected accounts.
+      const dataUrl = await compressCoverToDataUrl(blobUrl);
+      if (dataUrl) bookData.meta.coverUrl = dataUrl;
+      URL.revokeObjectURL(blobUrl);
     }
   } catch {
     // No cover available
