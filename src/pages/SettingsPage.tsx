@@ -89,7 +89,7 @@ export default function SettingsPage() {
         style={{ borderColor: 'var(--bg-tertiary)' }}
       >
         <button
-          onClick={() => navigate('/app')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 hover:opacity-80"
           style={{ color: 'var(--accent)' }}
         >

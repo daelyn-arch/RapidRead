@@ -64,7 +64,8 @@ export default function ProgressBar({ current, total, onSeek, chapterTitle, isPl
             {wordsRemaining > 0 && ` · ~${timeLeft} left`}
           </span>
           <span className="sm:hidden">
-            {percent.toFixed(0)}%{wordsRemaining > 0 && ` · ${timeLeft}`}
+            {percent.toFixed(0)}% · {current}/{total}
+            {wordsRemaining > 0 && ` · ${timeLeft}`}
           </span>
           {isPlaying !== undefined && (
             <span

@@ -6,6 +6,8 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useRsvpPlayback } from '@/hooks/useRsvpPlayback';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
 import { loadBookContent } from '@/services/storageService';
+import { downloadBookContentByClientId } from '@/sync/bookSync';
+import { useAuth } from '@/auth/useAuth';
 import { loadDictionary, getDictionary } from '@/services/dictionaryService';
 import { tokenize } from '@/engine/tokenizer';
 import RsvpDisplay from '@/components/reader/RsvpDisplay';
@@ -34,6 +36,7 @@ export default function ReaderPage() {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const isPro = useIsPro();
+  const { user } = useAuth();
 
   // Toggle focus mode: hides header, controls, and progress bar so only
   // the word (or page text) is visible. On browsers that support the
@@ -119,7 +122,17 @@ export default function ReaderPage() {
       setLoading(true);
       try {
         await loadDictionary();
-        const content = await loadBookContent(bookId);
+        let content = await loadBookContent(bookId);
+        // Cloud fallback: if metadata synced but local content is missing
+        // (typical when signing in on a new device), pull the parsed
+        // chapters from Supabase Storage and hydrate IndexedDB.
+        if (!content && user) {
+          try {
+            content = await downloadBookContentByClientId(user.id, bookId);
+          } catch (e) {
+            console.warn('Cloud content fallback failed:', e);
+          }
+        }
         if (cancelled) return;
         if (content) {
           setChapters(content);

@@ -80,6 +80,26 @@ export async function downloadBookContent(row: CloudBookRow) {
   return parsed.chapters;
 }
 
+/**
+ * Look up the cloud row for a book by its client ID and pull the parsed
+ * chapters into IndexedDB. Used by the reader when a book exists in the
+ * library (synced metadata) but has no local content yet — typical when
+ * the user signs in on a new device.
+ */
+export async function downloadBookContentByClientId(
+  userId: string,
+  clientId: string,
+): Promise<Chapter[] | null> {
+  const { data, error } = await supabase
+    .from('books')
+    .select('id,user_id,client_id,title,author,format,total_words,chapter_count,storage_path,parsed_path,imported_at,last_read_at')
+    .eq('user_id', userId)
+    .eq('client_id', clientId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return downloadBookContent(data as CloudBookRow);
+}
+
 export async function deleteCloudBook(userId: string, clientId: string) {
   const path = parsedPathFor(userId, clientId);
   await supabase.storage.from('books').remove([path]);
