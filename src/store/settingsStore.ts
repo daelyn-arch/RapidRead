@@ -7,6 +7,14 @@ import { DEFAULT_PROFILE } from '@/types/rsvp';
 
 interface SettingsState {
   settings: AppSettings;
+  /** Wall-clock ms when `settings` was last mutated (any field). Used by
+   *  the cloud sync layer to decide last-writer-wins on sign-in. Bumped
+   *  automatically via the hash watcher at the bottom of this file. */
+  _lastModifiedAt?: number;
+  /** Auth user id whose cloud settings the current local copy reflects.
+   *  Mismatch on sign-in → treat cloud as authoritative regardless of
+   *  timestamp (avoids leaking account A's settings into account B). */
+  _syncedForUser?: string | null;
   getActiveProfile: () => SpeedProfile;
   setBaseWpm: (wpm: number) => void;
   setTransitionDuration: (seconds: number) => void;
@@ -183,7 +191,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'rapidread-settings',
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown) => {
         const state = persisted as { settings?: AppSettings };
         if (state?.settings) {
@@ -216,3 +224,30 @@ export const useSettingsStore = create<SettingsState>()(
     },
   ),
 );
+
+/**
+ * Hash watcher — bumps `_lastModifiedAt` whenever the persisted `settings`
+ * blob actually changes, without requiring every setter to do it manually.
+ * One-time module-level subscribe; cheap (a single JSON.stringify per
+ * setState).
+ *
+ * Cloud-sync code (useCloudSync) calls `suppressNextSettingsBump()` before
+ * applying a downloaded settings payload so the local timestamp aligns with
+ * the cloud `updated_at` instead of being clobbered to Date.now().
+ */
+let _suppressBumpOnce = false;
+export function suppressNextSettingsBump() {
+  _suppressBumpOnce = true;
+}
+
+let _prevSettingsHash = JSON.stringify(useSettingsStore.getState().settings);
+useSettingsStore.subscribe((state) => {
+  const curHash = JSON.stringify(state.settings);
+  if (curHash === _prevSettingsHash) return;
+  _prevSettingsHash = curHash;
+  if (_suppressBumpOnce) {
+    _suppressBumpOnce = false;
+    return;
+  }
+  useSettingsStore.setState({ _lastModifiedAt: Date.now() });
+});

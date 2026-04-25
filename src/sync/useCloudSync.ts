@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/auth/useAuth';
 import { useIsPro } from '@/billing/useIsPro';
 import { useLibraryStore } from '@/store/libraryStore';
+import { useSettingsStore, suppressNextSettingsBump } from '@/store/settingsStore';
 import { syncQueue } from '@/lib/syncQueue';
 import { loadBookContent } from '@/services/storageService';
+import { fetchCloudSettings, pushCloudSettings } from './settingsSync';
 import {
   initialLibrarySync,
   uploadBook,
@@ -91,6 +93,46 @@ export function useCloudSync() {
             });
           }
         });
+
+        // Settings — last-writer-wins, with one twist: if the local
+        // _syncedForUser doesn't match this account, treat cloud as
+        // authoritative regardless of local timestamp (so signing into a
+        // different account on the same device doesn't push device A's
+        // settings into account B).
+        try {
+          const cloudSettings = await fetchCloudSettings(user.id);
+          const settingsState = useSettingsStore.getState();
+          const localModifiedMs = settingsState._lastModifiedAt ?? 0;
+          const sameUser = settingsState._syncedForUser === user.id;
+          if (!cloudSettings) {
+            // First time this account has cloud settings — push local up.
+            const cloudUpdatedAt = await pushCloudSettings(user.id, settingsState.settings);
+            useSettingsStore.setState({
+              _lastModifiedAt: new Date(cloudUpdatedAt).getTime(),
+              _syncedForUser: user.id,
+            });
+          } else {
+            const cloudMs = new Date(cloudSettings.updated_at).getTime();
+            const localWins = sameUser && localModifiedMs > cloudMs;
+            if (localWins) {
+              const cloudUpdatedAt = await pushCloudSettings(user.id, settingsState.settings);
+              useSettingsStore.setState({
+                _lastModifiedAt: new Date(cloudUpdatedAt).getTime(),
+                _syncedForUser: user.id,
+              });
+            } else {
+              suppressNextSettingsBump();
+              useSettingsStore.setState({
+                settings: cloudSettings.data,
+                _lastModifiedAt: cloudMs,
+                _syncedForUser: user.id,
+              });
+            }
+          }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('[cloudSync] settings sync failed', e);
+        }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.warn('[cloudSync] initial sync failed', e);
@@ -193,6 +235,32 @@ export function useCloudSync() {
         }
       }
       prevIds = curIds;
+    });
+    return () => unsub();
+  }, [active, user]);
+
+  // Settings outbound: hash the settings JSON, push to cloud whenever it
+  // changes (debounced via the syncQueue). The hash watcher in
+  // settingsStore.ts has already bumped `_lastModifiedAt`; we only react
+  // to actual content diffs to avoid spurious pushes from no-op setState.
+  useEffect(() => {
+    if (!active || !user) return;
+    let prevHash = JSON.stringify(useSettingsStore.getState().settings);
+    const unsub = useSettingsStore.subscribe((state) => {
+      const curHash = JSON.stringify(state.settings);
+      if (curHash === prevHash) return;
+      prevHash = curHash;
+      syncQueue.enqueue(
+        'settings',
+        async () => {
+          const updatedAt = await pushCloudSettings(user.id, state.settings);
+          useSettingsStore.setState({
+            _lastModifiedAt: new Date(updatedAt).getTime(),
+            _syncedForUser: user.id,
+          });
+        },
+        2500, // 2.5s debounce — coalesces rapid slider drags
+      );
     });
     return () => unsub();
   }, [active, user]);
