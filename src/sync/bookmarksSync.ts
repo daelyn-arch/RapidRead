@@ -38,7 +38,15 @@ export async function upsertBookmark(userId: string, bookmark: Bookmark) {
       label: bookmark.label ?? null,
       created_at: new Date(bookmark.createdAt).toISOString(),
     }, { onConflict: 'user_id,client_id' });
-  if (error) throw new Error(`upsertBookmark: ${error.message}`);
+  if (error) {
+    // 23505 = postgres unique_violation. Hits when the new
+    // (user_id, book_id, chapter_index, word_index) constraint from
+    // migration 0005 rejects a duplicate insert from a different
+    // client_id. The bookmark is already saved at that position —
+    // treat as success.
+    if ((error as { code?: string }).code === '23505') return;
+    throw new Error(`upsertBookmark: ${error.message}`);
+  }
 }
 
 export async function deleteBookmark(userId: string, bookmarkClientId: string) {
