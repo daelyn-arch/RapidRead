@@ -12,6 +12,9 @@ interface LibraryState {
   updateProgress: (bookId: string, update: Partial<ReadingProgress>) => void;
   getProgress: (bookId: string) => ReadingProgress | undefined;
   addBookmark: (bookmark: Omit<Bookmark, 'id' | 'createdAt'>) => void;
+  /** Merge bookmarks from cloud, preserving their existing id + createdAt.
+   *  Uses id as the dedupe key — adds rows whose id isn't already local. */
+  mergeBookmarks: (incoming: Bookmark[]) => void;
   removeBookmark: (id: string) => void;
   getBookmarks: (bookId: string) => Bookmark[];
 }
@@ -66,6 +69,13 @@ export const useLibraryStore = create<LibraryState>()(
           { ...bookmark, id: crypto.randomUUID(), createdAt: Date.now() },
         ],
       })),
+
+      mergeBookmarks: (incoming: Bookmark[]) => set(state => {
+        const have = new Set(state.bookmarks.map(b => b.id));
+        const additions = incoming.filter(b => !have.has(b.id));
+        if (additions.length === 0) return state;
+        return { bookmarks: [...state.bookmarks, ...additions] };
+      }),
 
       removeBookmark: (id: string) => set(state => ({
         bookmarks: state.bookmarks.filter(b => b.id !== id),

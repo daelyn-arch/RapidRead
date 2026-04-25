@@ -9,7 +9,7 @@ import { fetchCloudSettings, pushCloudSettings } from './settingsSync';
 import {
   initialLibrarySync,
   uploadBook,
-  listCloudBooks,
+  listCloudBookClientIds,
   deleteCloudBook,
 } from './bookSync';
 import {
@@ -79,20 +79,24 @@ export function useCloudSync() {
           }
         });
 
-        // Merge cloud bookmarks (idempotent by client_id).
+        // Bookmarks: cloud is authoritative on sign-in. Replace local
+        // wholesale rather than merge.
+        //
+        // History: an earlier build accidentally re-added cloud
+        // bookmarks via addBookmark() (which mints fresh UUIDs each
+        // call), so every sign-in created N new locally-tracked
+        // bookmarks; the outbound subscribe then pushed them up,
+        // doubling the cloud count each session. One affected user
+        // ended up with 3917 duplicates of a single real bookmark —
+        // enough to freeze the browser on sign-in.
+        //
+        // The dedupe code below is the fix; replacing rather than
+        // merging also self-heals devices whose IndexedDB still holds
+        // the ghost rows. This matches the user-facing contract of
+        // "everything carries over to other devices, no differences"
+        // — cloud is truth on sign-in.
         const cloudBookmarks = await fetchAllBookmarks(user.id);
-        const storeNow = useLibraryStore.getState();
-        const localBmIds = new Set(storeNow.bookmarks.map((b) => b.id));
-        cloudBookmarks.forEach((bm) => {
-          if (!localBmIds.has(bm.id)) {
-            storeNow.addBookmark({
-              bookId: bm.bookId,
-              chapterIndex: bm.chapterIndex,
-              wordIndex: bm.wordIndex,
-              label: bm.label,
-            });
-          }
-        });
+        useLibraryStore.setState({ bookmarks: cloudBookmarks });
 
         // Settings — last-writer-wins, with one twist: if the local
         // _syncedForUser doesn't match this account, treat cloud as
@@ -179,9 +183,10 @@ export function useCloudSync() {
         lastBooksSignature.current = bookSig;
         for (const b of state.books) {
           syncQueue.enqueue(`book:${b.id}`, async () => {
-            // Only upload if not already uploaded.
-            const existing = await listCloudBooks(user.id);
-            if (existing.some((r) => r.client_id === b.id)) return;
+            // Only upload if not already uploaded. Use the slim
+            // existence-check helper to avoid pulling cover_url blobs.
+            const existing = await listCloudBookClientIds(user.id);
+            if (existing.has(b.id)) return;
             const chapters = await loadBookContent(b.id);
             if (!chapters) return;
             await uploadBook(user.id, b, chapters);

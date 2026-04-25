@@ -23,12 +23,31 @@ function parsedPathFor(userId: string, clientId: string) {
 }
 
 export async function listCloudBooks(userId: string): Promise<CloudBookRow[]> {
+  // NOTE: avoid `select('*')` — `cover_url` holds large data: URLs
+  // (sometimes multi-MB for cover-rich EPUBs). Pulling it on every
+  // listCloudBooks call from the outbound watcher meant 30+ MB of
+  // bandwidth per sign-in for users with big-cover books. List the
+  // exact columns we need.
   const { data, error } = await supabase
     .from('books')
-    .select('*')
+    .select('id,user_id,client_id,title,author,format,total_words,chapter_count,storage_path,parsed_path,cover_url,imported_at,last_read_at')
     .eq('user_id', userId);
   if (error) throw new Error(`listCloudBooks: ${error.message}`);
   return (data ?? []) as CloudBookRow[];
+}
+
+/**
+ * Cheap existence check used by the outbound subscribe loop. Pulling
+ * full rows (including `cover_url`) every time a book changes is what
+ * gave us the 30+ MB bandwidth blowup; this returns just `client_id`.
+ */
+export async function listCloudBookClientIds(userId: string): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('books')
+    .select('client_id')
+    .eq('user_id', userId);
+  if (error) throw new Error(`listCloudBookClientIds: ${error.message}`);
+  return new Set((data ?? []).map((r: { client_id: string }) => r.client_id));
 }
 
 /**

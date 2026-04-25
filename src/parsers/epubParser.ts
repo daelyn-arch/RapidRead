@@ -117,14 +117,22 @@ export async function readEpubFile(file: File): Promise<BookData> {
       // reloads and round-trips through cloud sync.
       const res = await fetch(blobUrl);
       const blob = await res.blob();
-      const dataUrl: string = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(blob);
-      });
-      bookData.meta.coverUrl = dataUrl;
-      URL.revokeObjectURL(blobUrl);
+      // Cap at ~800KB raw to prevent multi-MB covers (some EPUBs ship
+      // 4-5MB hi-res JPEGs) from bloating the books row + every
+      // listCloudBooks payload. Drop the cover entirely if oversized.
+      const MAX_COVER_BYTES = 800 * 1024;
+      if (blob.size > MAX_COVER_BYTES) {
+        URL.revokeObjectURL(blobUrl);
+      } else {
+        const dataUrl: string = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        });
+        bookData.meta.coverUrl = dataUrl;
+        URL.revokeObjectURL(blobUrl);
+      }
     }
   } catch {
     // No cover available
