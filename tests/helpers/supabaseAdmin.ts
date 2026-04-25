@@ -54,6 +54,23 @@ export async function createConfirmedUser(email: string, password: string) {
 }
 
 /**
+ * Flip a user's profile.plan to 'pro' so cloud-sync activates in tests.
+ * Uses PostgREST with the service_role key (bypasses RLS).
+ */
+export async function setUserPlan(userId: string, plan: 'free' | 'pro') {
+  const { url, key } = requireEnv();
+  const res = await fetch(`${url}/rest/v1/profiles?id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: { ...adminHeaders(key), Prefer: 'return=minimal' },
+    body: JSON.stringify({ plan, plan_status: plan === 'pro' ? 'active' : null }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`setUserPlan failed (${res.status}): ${body}`);
+  }
+}
+
+/**
  * Remove a user by id so tests don't leave detritus in auth.users and
  * cascade-drop their profiles / books / progress rows.
  */
