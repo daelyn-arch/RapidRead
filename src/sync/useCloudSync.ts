@@ -8,6 +8,7 @@ import {
   initialLibrarySync,
   uploadBook,
   listCloudBooks,
+  deleteCloudBook,
 } from './bookSync';
 import {
   fetchAllProgress,
@@ -171,6 +172,24 @@ export function useCloudSync() {
       for (const id of prevIds) {
         if (!curIds.has(id)) {
           syncQueue.enqueue(`bookmark-del:${id}`, () => deleteBookmark(user.id, id));
+        }
+      }
+      prevIds = curIds;
+    });
+    return () => unsub();
+  }, [active, user]);
+
+  // Book deletions: parallel to the bookmark watcher above. Removes the
+  // cloud row + Storage blob; the books → reading_progress / bookmarks
+  // foreign-key cascade cleans up the rest server-side.
+  useEffect(() => {
+    if (!active || !user) return;
+    let prevIds = new Set(useLibraryStore.getState().books.map((b) => b.id));
+    const unsub = useLibraryStore.subscribe((state) => {
+      const curIds = new Set(state.books.map((b) => b.id));
+      for (const id of prevIds) {
+        if (!curIds.has(id)) {
+          syncQueue.enqueue(`book-del:${id}`, () => deleteCloudBook(user.id, id));
         }
       }
       prevIds = curIds;
