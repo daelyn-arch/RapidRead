@@ -110,9 +110,21 @@ export async function readEpubFile(file: File): Promise<BookData> {
   };
 
   try {
-    const coverUrl = await book.coverUrl();
-    if (coverUrl) {
-      bookData.meta.coverUrl = coverUrl;
+    const blobUrl = await book.coverUrl();
+    if (blobUrl) {
+      // epubjs returns a blob: URL that's only valid for the current
+      // page lifetime. Convert to a data URL so the cover survives
+      // reloads and round-trips through cloud sync.
+      const res = await fetch(blobUrl);
+      const blob = await res.blob();
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+      bookData.meta.coverUrl = dataUrl;
+      URL.revokeObjectURL(blobUrl);
     }
   } catch {
     // No cover available

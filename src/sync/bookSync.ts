@@ -13,6 +13,7 @@ interface CloudBookRow {
   chapter_count: number;
   storage_path: string | null;
   parsed_path: string | null;
+  cover_url: string | null;
   imported_at: string;
   last_read_at: string | null;
 }
@@ -58,6 +59,7 @@ export async function uploadBook(
       total_words: meta.totalWords,
       chapter_count: meta.chapterCount,
       parsed_path: path,
+      cover_url: meta.coverUrl ?? null,
       imported_at: new Date(meta.importedAt).toISOString(),
       last_read_at: meta.lastReadAt ? new Date(meta.lastReadAt).toISOString() : null,
     }, { onConflict: 'user_id,client_id' });
@@ -92,7 +94,7 @@ export async function downloadBookContentByClientId(
 ): Promise<Chapter[] | null> {
   const { data, error } = await supabase
     .from('books')
-    .select('id,user_id,client_id,title,author,format,total_words,chapter_count,storage_path,parsed_path,imported_at,last_read_at')
+    .select('id,user_id,client_id,title,author,format,total_words,chapter_count,storage_path,parsed_path,cover_url,imported_at,last_read_at')
     .eq('user_id', userId)
     .eq('client_id', clientId)
     .maybeSingle();
@@ -119,20 +121,40 @@ export function cloudRowToMeta(row: CloudBookRow): BookMeta {
     format: row.format,
     totalWords: row.total_words,
     chapterCount: row.chapter_count,
+    coverUrl: row.cover_url ?? undefined,
     importedAt: new Date(row.imported_at).getTime(),
     lastReadAt: row.last_read_at ? new Date(row.last_read_at).getTime() : undefined,
   };
 }
 
 /**
+ * Patch a single field on the cloud row (e.g. backfill cover_url without
+ * re-uploading the parsed.json blob).
+ */
+async function patchCloudBookField(
+  userId: string,
+  clientId: string,
+  patch: Partial<Pick<CloudBookRow, 'cover_url'>>,
+) {
+  const { error } = await supabase
+    .from('books')
+    .update(patch)
+    .eq('user_id', userId)
+    .eq('client_id', clientId);
+  if (error) throw new Error(`patchCloudBookField: ${error.message}`);
+}
+
+/**
  * One-shot library merge on login. Last-writer-wins by imported_at / lastReadAt.
  * - Local books missing in cloud → upload.
  * - Cloud books missing locally → add to local library (content downloaded on demand).
+ * - Covers backfill in both directions for books present in both stores.
  */
 export async function initialLibrarySync(
   userId: string,
   localBooks: BookMeta[],
   addLocalBook: (meta: BookMeta) => void,
+  updateLocalBook?: (bookId: string, patch: Partial<BookMeta>) => void,
 ) {
   const cloudRows = await listCloudBooks(userId);
   const cloudByClientId = new Map(cloudRows.map((r) => [r.client_id, r]));
@@ -155,5 +177,23 @@ export async function initialLibrarySync(
   for (const row of cloudRows) {
     if (localByClientId.has(row.client_id)) continue;
     addLocalBook(cloudRowToMeta(row));
+  }
+
+  // Cover backfill — covers were not synced before v0.5.4, so existing
+  // libraries split into two states: cloud has none / local has none.
+  // Reconcile both directions for any book present in both stores.
+  for (const local of localBooks) {
+    const row = cloudByClientId.get(local.id);
+    if (!row) continue;
+    if (local.coverUrl && !row.cover_url) {
+      try {
+        await patchCloudBookField(userId, local.id, { cover_url: local.coverUrl });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('[sync] cover backfill (push) failed for', local.id, e);
+      }
+    } else if (!local.coverUrl && row.cover_url && updateLocalBook) {
+      updateLocalBook(local.id, { coverUrl: row.cover_url });
+    }
   }
 }

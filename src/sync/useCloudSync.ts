@@ -60,7 +60,7 @@ export function useCloudSync() {
     // Fire-and-forget initial merge.
     (async () => {
       try {
-        await initialLibrarySync(user.id, store.books, store.addBook);
+        await initialLibrarySync(user.id, store.books, store.addBook, store.updateBookMeta);
 
         // Merge cloud progress in (last-writer-wins).
         const cloudProgress = await fetchAllProgress(user.id);

@@ -7,6 +7,7 @@ interface LibraryState {
   progress: Record<string, ReadingProgress>;
   bookmarks: Bookmark[];
   addBook: (meta: BookMeta) => void;
+  updateBookMeta: (bookId: string, patch: Partial<BookMeta>) => void;
   removeBook: (id: string) => void;
   updateProgress: (bookId: string, update: Partial<ReadingProgress>) => void;
   getProgress: (bookId: string) => ReadingProgress | undefined;
@@ -24,6 +25,10 @@ export const useLibraryStore = create<LibraryState>()(
 
       addBook: (meta: BookMeta) => set(state => ({
         books: [...state.books, meta],
+      })),
+
+      updateBookMeta: (bookId: string, patch: Partial<BookMeta>) => set(state => ({
+        books: state.books.map(b => (b.id === bookId ? { ...b, ...patch } : b)),
       })),
 
       removeBook: (id: string) => set(state => {
