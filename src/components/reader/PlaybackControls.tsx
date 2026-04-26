@@ -104,12 +104,6 @@ export default function PlaybackControls() {
             onLockedClick={openPaywall}
           />
         )}
-        <Stepper
-          label="Base"
-          value={String(profile.baseWpm)}
-          onDec={() => setBaseWpm(profile.baseWpm - 25)}
-          onInc={() => setBaseWpm(profile.baseWpm + 25)}
-        />
         {unfamiliarRule && (
           <Stepper
             label="Unfamiliar"
@@ -130,6 +124,12 @@ export default function PlaybackControls() {
           valueWidth="3rem"
           locked={!isPro}
           onLockedClick={openPaywall}
+        />
+        <Stepper
+          label="Base"
+          value={String(profile.baseWpm)}
+          onDec={() => setBaseWpm(profile.baseWpm - 25)}
+          onInc={() => setBaseWpm(profile.baseWpm + 25)}
         />
       </div>
 
