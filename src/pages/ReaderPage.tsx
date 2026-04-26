@@ -408,41 +408,34 @@ export default function ReaderPage() {
         </div>
       </div>}
 
-      {/* Focus-mode exit button — floats top-right while focused.
-          Uses calc(safe-area-inset-top + 0.75rem) so it doesn't slip
-          under the iPhone status bar / notch when installed to Home Screen. */}
-      {focusMode && (
-        <button
-          onClick={toggleFocusMode}
-          className="fixed right-3 p-2 rounded-full z-50 transition-opacity"
-          style={{
-            top: 'calc(env(safe-area-inset-top) + 0.75rem)',
-            background: 'var(--bg-secondary)',
-            color: 'var(--text-secondary)',
-            opacity: 0.7,
-          }}
-          title="Exit focus mode"
-          aria-label="Exit focus mode"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="4 14 10 14 10 20" />
-            <polyline points="20 10 14 10 14 4" />
-            <line x1="14" y1="10" x2="21" y2="3" />
-            <line x1="3" y1="21" x2="10" y2="14" />
-          </svg>
-        </button>
-      )}
-
-      {/* Focus-mode quick-adjust stack — bottom-right. Faint by default;
-          tap to cycle context (B → D → U) or nudge ±25 WPM. */}
+      {/* Focus-mode control stack — vertically centered along the right
+          edge. Exit on top, then context cycler (B/D/U), then ±25 WPM
+          nudgers. All four are the same size and faint by default. */}
       {focusMode && (
         <div
-          className="fixed right-3 z-50 flex flex-col gap-2"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}
+          className="fixed right-3 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2"
         >
           <button
+            onClick={toggleFocusMode}
+            className="w-[60px] h-[60px] rounded-full transition-opacity hover:opacity-90 flex items-center justify-center"
+            style={{
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-secondary)',
+              opacity: 0.45,
+            }}
+            title="Exit focus mode"
+            aria-label="Exit focus mode"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="4 14 10 14 10 20" />
+              <polyline points="20 10 14 10 14 4" />
+              <line x1="14" y1="10" x2="21" y2="3" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+          </button>
+          <button
             onClick={cycleFocusContext}
-            className="w-10 h-10 rounded-full font-bold text-sm transition-opacity hover:opacity-90"
+            className="w-[60px] h-[60px] rounded-full font-bold text-base transition-opacity hover:opacity-90"
             style={{
               background: 'var(--bg-secondary)',
               color: 'var(--text-primary)',
@@ -455,7 +448,7 @@ export default function ReaderPage() {
           </button>
           <button
             onClick={() => adjustFocusContext(25)}
-            className="w-10 h-10 rounded-full font-bold text-lg transition-opacity hover:opacity-90"
+            className="w-[60px] h-[60px] rounded-full font-bold text-2xl transition-opacity hover:opacity-90"
             style={{
               background: 'var(--bg-secondary)',
               color: 'var(--text-primary)',
@@ -468,7 +461,7 @@ export default function ReaderPage() {
           </button>
           <button
             onClick={() => adjustFocusContext(-25)}
-            className="w-10 h-10 rounded-full font-bold text-lg transition-opacity hover:opacity-90"
+            className="w-[60px] h-[60px] rounded-full font-bold text-2xl transition-opacity hover:opacity-90"
             style={{
               background: 'var(--bg-secondary)',
               color: 'var(--text-primary)',
@@ -483,12 +476,13 @@ export default function ReaderPage() {
       )}
 
       {/* Focus-mode HUD — flashes the current context label + value
-          briefly when it changes, then fades. */}
+          briefly when it changes, then fades. Positioned bottom-center
+          so it's clear of the right-edge button stack. */}
       {focusMode && focusHud && (
         <div
           className="fixed left-1/2 -translate-x-1/2 px-4 py-2 rounded-full z-50 transition-opacity"
           style={{
-            bottom: 'calc(env(safe-area-inset-bottom) + 4.5rem)',
+            bottom: 'calc(env(safe-area-inset-bottom) + 2rem)',
             background: 'var(--bg-secondary)',
             color: 'var(--text-primary)',
             opacity: 0.85,
