@@ -409,8 +409,9 @@ export default function ReaderPage() {
       </div>}
 
       {/* Focus-mode control stack — vertically centered along the right
-          edge. Exit on top, then context cycler (B/D/U), then ±25 WPM
-          nudgers. All four are the same size and faint by default. */}
+          edge. Top to bottom: Exit, +25, Context (B/D/U), −25. The
+          context selector sits between the +/- so it's surrounded by
+          the action buttons that operate on it. */}
       {focusMode && (
         <div
           className="fixed right-3 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2"
@@ -434,19 +435,6 @@ export default function ReaderPage() {
             </svg>
           </button>
           <button
-            onClick={cycleFocusContext}
-            className="w-[60px] h-[60px] rounded-full font-bold text-base transition-opacity hover:opacity-90"
-            style={{
-              background: 'var(--bg-secondary)',
-              color: 'var(--text-primary)',
-              opacity: 0.45,
-            }}
-            title={`Context: ${focusContextLabel(focusContext)} (tap to cycle)`}
-            aria-label={`Context: ${focusContextLabel(focusContext)}`}
-          >
-            {focusContext}
-          </button>
-          <button
             onClick={() => adjustFocusContext(25)}
             className="w-[60px] h-[60px] rounded-full font-bold text-2xl transition-opacity hover:opacity-90"
             style={{
@@ -458,6 +446,19 @@ export default function ReaderPage() {
             aria-label="Increase speed"
           >
             +
+          </button>
+          <button
+            onClick={cycleFocusContext}
+            className="w-[60px] h-[60px] rounded-full font-bold text-base transition-opacity hover:opacity-90"
+            style={{
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              opacity: 0.45,
+            }}
+            title={`Context: ${focusContextLabel(focusContext)} (tap to cycle)`}
+            aria-label={`Context: ${focusContextLabel(focusContext)}`}
+          >
+            {focusContext}
           </button>
           <button
             onClick={() => adjustFocusContext(-25)}
