@@ -35,6 +35,12 @@ export default function ReaderPage() {
   const [activeMenu, setActiveMenu] = useState<{ tokenIndex: number; rect: DOMRect } | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  // Focus-mode quick adjuster — which speed knob the +/- buttons act on.
+  // B = base WPM, D = dialogue rule, U = unfamiliar rule.
+  const [focusContext, setFocusContext] = useState<'B' | 'D' | 'U'>('B');
+  // Transient HUD shown when the user nudges a value, then fades.
+  const [focusHud, setFocusHud] = useState<{ label: string; value: number } | null>(null);
+  const focusHudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPro = useIsPro();
   const { user } = useAuth();
 
@@ -240,6 +246,49 @@ export default function ReaderPage() {
     }
   }, [currentChapterIndex, loadChapter, playback]);
 
+  // Focus-mode quick-adjust: nudge the active context (Base/Dialogue/
+  // Unfamiliar) by ±25 WPM and flash the HUD with the new value.
+  const setRuleWpm = useSettingsStore(s => s.setRuleWpm);
+  const flashFocusHud = useCallback((label: string, value: number) => {
+    setFocusHud({ label, value });
+    if (focusHudTimerRef.current) clearTimeout(focusHudTimerRef.current);
+    focusHudTimerRef.current = setTimeout(() => setFocusHud(null), 1400);
+  }, []);
+  const focusContextLabel = useCallback((c: 'B' | 'D' | 'U') => (
+    c === 'B' ? 'Base' : c === 'D' ? 'Dialogue' : 'Unfamiliar'
+  ), []);
+  const cycleFocusContext = useCallback(() => {
+    setFocusContext(prev => {
+      const next = prev === 'B' ? 'D' : prev === 'D' ? 'U' : 'B';
+      const profile = getActiveProfile();
+      const value = next === 'B'
+        ? profile.baseWpm
+        : (profile.rules.find(r => r.id === (next === 'D' ? 'dialogue' : 'unfamiliar'))?.wpm ?? 0);
+      flashFocusHud(focusContextLabel(next), value);
+      return next;
+    });
+  }, [getActiveProfile, flashFocusHud, focusContextLabel]);
+  const adjustFocusContext = useCallback((delta: number) => {
+    const profile = getActiveProfile();
+    if (focusContext === 'B') {
+      const next = profile.baseWpm + delta;
+      setBaseWpm(next);
+      // Re-read after clamp so HUD reflects what was actually applied.
+      flashFocusHud('Base', useSettingsStore.getState().getActiveProfile().baseWpm);
+    } else {
+      const ruleId = focusContext === 'D' ? 'dialogue' : 'unfamiliar';
+      const rule = profile.rules.find(r => r.id === ruleId);
+      if (!rule) return;
+      const next = rule.wpm + delta;
+      setRuleWpm(profile.id, ruleId, next);
+      const after = useSettingsStore.getState().getActiveProfile().rules.find(r => r.id === ruleId);
+      flashFocusHud(focusContextLabel(focusContext), after?.wpm ?? next);
+    }
+  }, [focusContext, getActiveProfile, setBaseWpm, setRuleWpm, flashFocusHud, focusContextLabel]);
+  useEffect(() => () => {
+    if (focusHudTimerRef.current) clearTimeout(focusHudTimerRef.current);
+  }, []);
+
   const keyboardActions = useMemo(() => ({
     toggle: playback.toggle,
     skipForward: playback.skipForward,
@@ -382,6 +431,75 @@ export default function ReaderPage() {
             <line x1="3" y1="21" x2="10" y2="14" />
           </svg>
         </button>
+      )}
+
+      {/* Focus-mode quick-adjust stack — bottom-right. Faint by default;
+          tap to cycle context (B → D → U) or nudge ±25 WPM. */}
+      {focusMode && (
+        <div
+          className="fixed right-3 z-50 flex flex-col gap-2"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}
+        >
+          <button
+            onClick={cycleFocusContext}
+            className="w-10 h-10 rounded-full font-bold text-sm transition-opacity hover:opacity-90"
+            style={{
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              opacity: 0.45,
+            }}
+            title={`Context: ${focusContextLabel(focusContext)} (tap to cycle)`}
+            aria-label={`Context: ${focusContextLabel(focusContext)}`}
+          >
+            {focusContext}
+          </button>
+          <button
+            onClick={() => adjustFocusContext(25)}
+            className="w-10 h-10 rounded-full font-bold text-lg transition-opacity hover:opacity-90"
+            style={{
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              opacity: 0.45,
+            }}
+            title={`+25 WPM on ${focusContextLabel(focusContext)}`}
+            aria-label="Increase speed"
+          >
+            +
+          </button>
+          <button
+            onClick={() => adjustFocusContext(-25)}
+            className="w-10 h-10 rounded-full font-bold text-lg transition-opacity hover:opacity-90"
+            style={{
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              opacity: 0.45,
+            }}
+            title={`-25 WPM on ${focusContextLabel(focusContext)}`}
+            aria-label="Decrease speed"
+          >
+            −
+          </button>
+        </div>
+      )}
+
+      {/* Focus-mode HUD — flashes the current context label + value
+          briefly when it changes, then fades. */}
+      {focusMode && focusHud && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 px-4 py-2 rounded-full z-50 transition-opacity"
+          style={{
+            bottom: 'calc(env(safe-area-inset-bottom) + 4.5rem)',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            opacity: 0.85,
+            pointerEvents: 'none',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+          aria-live="polite"
+        >
+          <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{focusHud.label}</span>
+          <span className="ml-3 text-lg font-mono">{focusHud.value} <span className="text-xs opacity-70">wpm</span></span>
+        </div>
       )}
 
       {/* Main content area */}
