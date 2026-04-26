@@ -23,6 +23,12 @@ export interface SpeedRule {
   condition: SpeedCondition;
   wpm: number;
   enabled: boolean;
+  /** When true, the per-word transition ramp engages after this rule fires.
+   *  When false, the speed snaps straight back to baseWpm after the rule
+   *  zone ends. Default-on for rules where you usually need a moment to
+   *  breathe (dialogue, unfamiliar); default-off for everything else so
+   *  the ramp doesn't compound across every comma + sentence boundary. */
+  causesRamp: boolean;
 }
 
 export interface SpeedProfile {
@@ -38,12 +44,12 @@ export interface SpeedProfile {
 }
 
 export const DEFAULT_RULES: SpeedRule[] = [
-  { id: 'dialogue', name: 'Dialogue', condition: 'isDialogue', wpm: 225, enabled: true },
-  { id: 'unfamiliar', name: 'Unfamiliar Words', condition: 'isUnfamiliar', wpm: 150, enabled: true },
-  { id: 'sentence-end', name: 'Sentence End', condition: 'isSentenceEnd', wpm: 120, enabled: true },
-  { id: 'paragraph', name: 'Paragraph Start', condition: 'isParagraphStart', wpm: 100, enabled: true },
-  { id: 'punctuation', name: 'Comma/Semicolon', condition: 'hasTrailingPunctuation', wpm: 200, enabled: true },
-  { id: 'long-word', name: 'Long Word (9+)', condition: 'isLongWord', wpm: 250, enabled: true },
+  { id: 'dialogue', name: 'Dialogue', condition: 'isDialogue', wpm: 225, enabled: true, causesRamp: true },
+  { id: 'unfamiliar', name: 'Unfamiliar Words', condition: 'isUnfamiliar', wpm: 150, enabled: true, causesRamp: true },
+  { id: 'sentence-end', name: 'Sentence End', condition: 'isSentenceEnd', wpm: 120, enabled: true, causesRamp: false },
+  { id: 'paragraph', name: 'Paragraph Start', condition: 'isParagraphStart', wpm: 100, enabled: true, causesRamp: false },
+  { id: 'punctuation', name: 'Comma/Semicolon', condition: 'hasTrailingPunctuation', wpm: 200, enabled: true, causesRamp: false },
+  { id: 'long-word', name: 'Long Word (9+)', condition: 'isLongWord', wpm: 250, enabled: true, causesRamp: false },
 ];
 
 export const DEFAULT_PROFILE: SpeedProfile = {

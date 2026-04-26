@@ -59,6 +59,32 @@ export function computeDialogueBlocks(tokens: WordToken[]): DialogueBlock[] {
 }
 
 /**
+ * Block-split the ENTIRE token array using the same sentence/clause-aware
+ * algorithm dialogue uses. Used by full-karaoke mode where every word
+ * renders as part of a moving-highlight chunk instead of one-at-a-time.
+ *
+ * Paragraph starts force a break — reading is more natural when paragraph
+ * boundaries align with karaoke chunk boundaries.
+ */
+export function computeAllKaraokeBlocks(tokens: WordToken[]): DialogueBlock[] {
+  const blocks: DialogueBlock[] = [];
+  if (tokens.length === 0) return blocks;
+
+  // Split at paragraph boundaries first, then sub-split each paragraph
+  // via the standard splitRun algorithm so long paragraphs still fit.
+  let segStart = 0;
+  for (let i = 1; i < tokens.length; i++) {
+    if (tokens[i].context.isParagraphStart) {
+      splitRun(tokens, segStart, i - 1, blocks);
+      segStart = i;
+    }
+  }
+  splitRun(tokens, segStart, tokens.length - 1, blocks);
+
+  return blocks;
+}
+
+/**
  * Break a contiguous dialogue run [start..end] into sub-blocks that respect
  * MAX_BLOCK_SIZE. Prefer sentence-end boundaries once the current sub-block
  * is at least SOFT_BLOCK_TARGET words; fall back to clause-level punctuation
