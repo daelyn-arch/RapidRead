@@ -71,7 +71,7 @@ export default function SpeedRuleRow({ rule, onToggle, onWpmChange, onCausesRamp
               background: 'transparent',
             }}
           >
-            {rule.causesRamp ? '↗ Ramp' : 'Ramp off'}
+            {rule.causesRamp ? '↗ Transition on' : 'Transition off'}
           </button>
         )}
         <button
