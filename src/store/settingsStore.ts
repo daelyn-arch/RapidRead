@@ -26,6 +26,7 @@ interface SettingsState {
   setFontSize: (size: number) => void;
   setReadingFont: (font: ReadingFont) => void;
   setKaraokeDialogue: (enabled: boolean) => void;
+  setFullKaraoke: (enabled: boolean) => void;
   setLongWordThreshold: (n: number) => void;
   setOrpColor: (color: string) => void;
   setDialogueColor: (color: string) => void;
@@ -129,6 +130,10 @@ export const useSettingsStore = create<SettingsState>()(
         settings: { ...state.settings, karaokeDialogue: enabled },
       })),
 
+      setFullKaraoke: (enabled: boolean) => set(state => ({
+        settings: { ...state.settings, fullKaraoke: enabled },
+      })),
+
       setLongWordThreshold: (n: number) => set(state => ({
         settings: { ...state.settings, longWordThreshold: Math.max(4, Math.min(20, Math.round(n))) },
       })),
@@ -191,13 +196,14 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'rapidread-settings',
-      version: 4,
+      version: 5,
       migrate: (persisted: unknown) => {
         const state = persisted as { settings?: AppSettings };
         if (state?.settings) {
           if (state.settings.dialogueColor === undefined) state.settings.dialogueColor = '#60a5fa';
           if (state.settings.unfamiliarColor === undefined) state.settings.unfamiliarColor = '#fbbf24';
           if (state.settings.karaokeDialogue === undefined) state.settings.karaokeDialogue = false;
+          if (state.settings.fullKaraoke === undefined) state.settings.fullKaraoke = false;
           if (state.settings.readingFont === undefined) state.settings.readingFont = 'system';
           if (state.settings.longWordThreshold === undefined) state.settings.longWordThreshold = 9;
         }
@@ -215,6 +221,13 @@ export const useSettingsStore = create<SettingsState>()(
                 const mod = (rule as unknown as { modifier: number }).modifier;
                 rule.wpm = Math.round(profile.baseWpm * mod);
                 delete (rule as unknown as { modifier?: number }).modifier;
+              }
+              // v5: per-rule causesRamp toggle. Default-on for rules where
+              // a breath after the slowdown is genuinely useful; default-off
+              // for the rest so the ramp doesn't fire on every comma.
+              if ((rule as unknown as { causesRamp?: boolean }).causesRamp === undefined) {
+                (rule as unknown as { causesRamp: boolean }).causesRamp =
+                  rule.id === 'dialogue' || rule.id === 'unfamiliar';
               }
             }
           }

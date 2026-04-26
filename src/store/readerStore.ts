@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { WordToken } from '@/types/rsvp';
 import {
   buildDialogueBlockIndex,
+  computeAllKaraokeBlocks,
   computeDialogueBlocks,
   type DialogueBlock,
 } from '@/engine/dialogueBlocks';
@@ -16,6 +17,8 @@ interface ReaderState {
   effectiveWpm: number;
   dialogueBlocks: DialogueBlock[];
   dialogueBlockIndex: Map<number, DialogueBlock>;
+  /** Block index covering EVERY token (used by full-karaoke mode). */
+  allKaraokeBlockIndex: Map<number, DialogueBlock>;
   setBook: (bookId: string) => void;
   setChapter: (chapterIndex: number) => void;
   setTokens: (tokens: WordToken[]) => void;
@@ -34,13 +37,15 @@ export const useReaderStore = create<ReaderState>()((set) => ({
   effectiveWpm: 0,
   dialogueBlocks: [],
   dialogueBlockIndex: new Map(),
+  allKaraokeBlockIndex: new Map(),
 
   setBook: (bookId: string) => set({ currentBookId: bookId }),
   setChapter: (chapterIndex: number) => set({ currentChapterIndex: chapterIndex }),
   setTokens: (tokens: WordToken[]) => {
     const dialogueBlocks = computeDialogueBlocks(tokens);
     const dialogueBlockIndex = buildDialogueBlockIndex(dialogueBlocks);
-    set({ tokens, dialogueBlocks, dialogueBlockIndex });
+    const allKaraokeBlockIndex = buildDialogueBlockIndex(computeAllKaraokeBlocks(tokens));
+    set({ tokens, dialogueBlocks, dialogueBlockIndex, allKaraokeBlockIndex });
   },
   setCurrentToken: (token: WordToken | null, index: number, effectiveWpm?: number) => set({
     currentToken: token,
@@ -57,5 +62,6 @@ export const useReaderStore = create<ReaderState>()((set) => ({
     currentToken: null,
     dialogueBlocks: [],
     dialogueBlockIndex: new Map(),
+    allKaraokeBlockIndex: new Map(),
   }),
 }));

@@ -4,7 +4,7 @@ import SpeedRuleRow from './SpeedRuleRow';
 
 export default function SpeedProfileEditor() {
   const profile = useSettingsStore(s => s.getActiveProfile)();
-  const { setBaseWpm, setTransitionStep, toggleRule, setRuleWpm } = useSettingsStore();
+  const { setBaseWpm, setTransitionStep, toggleRule, setRuleWpm, updateRule } = useSettingsStore();
 
   return (
     <div>
@@ -101,6 +101,9 @@ export default function SpeedProfileEditor() {
               rule={rule}
               onToggle={() => toggleRule(profile.id, rule.id)}
               onWpmChange={(wpm) => setRuleWpm(profile.id, rule.id, wpm)}
+              onCausesRampToggle={() =>
+                updateRule(profile.id, rule.id, { causesRamp: !rule.causesRamp })
+              }
             />
           ))}
         </div>

@@ -2,6 +2,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useIsPro } from '@/billing/useIsPro';
 import type { WordToken } from '@/types/rsvp';
+import type { DialogueBlock } from '@/engine/dialogueBlocks';
 import DialogueKaraoke from './DialogueKaraoke';
 
 interface Props {
@@ -10,10 +11,11 @@ interface Props {
 }
 
 export default function RsvpDisplay({ token, onTapToggle }: Props) {
-  const { fontSize, showORP, orpColor, dialogueColor, unfamiliarColor, fontFamily, karaokeDialogue } = useSettingsStore(s => s.settings);
+  const { fontSize, showORP, orpColor, dialogueColor, unfamiliarColor, fontFamily, karaokeDialogue, fullKaraoke } = useSettingsStore(s => s.settings);
   const tokens = useReaderStore(s => s.tokens);
   const currentTokenIndex = useReaderStore(s => s.currentTokenIndex);
   const dialogueBlockIndex = useReaderStore(s => s.dialogueBlockIndex);
+  const allKaraokeBlockIndex = useReaderStore(s => s.allKaraokeBlockIndex);
   const isPro = useIsPro();
 
   const getWordColor = (t: WordToken): string => {
@@ -40,11 +42,19 @@ export default function RsvpDisplay({ token, onTapToggle }: Props) {
     );
   }
 
-  // Dialogue karaoke mode: if enabled and the current token is inside a
-  // dialogue block, show the entire block with a moving highlight instead
-  // of single-word RSVP. Lets the reader see the context (tone, humor,
-  // sarcasm) while still pacing their eyes.
-  const activeBlock = (isPro && karaokeDialogue) ? dialogueBlockIndex.get(currentTokenIndex) : undefined;
+  // Karaoke mode resolution:
+  //   - fullKaraoke ON  → every token is rendered as part of a chunk
+  //   - karaokeDialogue → only tokens inside dialogue blocks render as chunks
+  //   - neither         → classic single-word RSVP
+  // Both modes are Pro-gated.
+  let activeBlock: DialogueBlock | undefined;
+  if (isPro) {
+    if (fullKaraoke) {
+      activeBlock = allKaraokeBlockIndex.get(currentTokenIndex);
+    } else if (karaokeDialogue) {
+      activeBlock = dialogueBlockIndex.get(currentTokenIndex);
+    }
+  }
   if (activeBlock) {
     return (
       <button

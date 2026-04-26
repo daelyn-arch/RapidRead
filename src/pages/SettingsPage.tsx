@@ -73,8 +73,8 @@ function ColorGrid({ label, value, onChange, disabled }: ColorGridProps) {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { theme, fontSize, fontFamily, readingFont, showORP, orpColor, dialogueColor, unfamiliarColor, karaokeDialogue, longWordThreshold } = useSettingsStore(s => s.settings);
-  const { setTheme, setFontSize, setReadingFont, setOrpColor, setDialogueColor, setUnfamiliarColor, setKaraokeDialogue, setLongWordThreshold } = useSettingsStore();
+  const { theme, fontSize, fontFamily, readingFont, showORP, orpColor, dialogueColor, unfamiliarColor, karaokeDialogue, fullKaraoke, longWordThreshold } = useSettingsStore(s => s.settings);
+  const { setTheme, setFontSize, setReadingFont, setOrpColor, setDialogueColor, setUnfamiliarColor, setKaraokeDialogue, setFullKaraoke, setLongWordThreshold } = useSettingsStore();
   const toggleORP = () => useSettingsStore.setState(s => ({ settings: { ...s.settings, showORP: !s.settings.showORP } }));
 
   return (
@@ -260,16 +260,53 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => setKaraokeDialogue(!karaokeDialogue)}
-                  className="w-10 h-6 rounded-full relative transition-colors shrink-0"
+                  className="w-10 h-6 rounded-full relative transition-colors shrink-0 disabled:opacity-40"
                   style={{
                     backgroundColor: karaokeDialogue ? 'var(--accent)' : 'var(--bg-tertiary)',
                   }}
                   aria-pressed={karaokeDialogue}
+                  disabled={fullKaraoke}
+                  title={fullKaraoke ? 'Full karaoke is on — every word is karaoke' : undefined}
                 >
                   <div
                     className="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform"
                     style={{
                       transform: karaokeDialogue ? 'translateX(20px)' : 'translateX(4px)',
+                    }}
+                  />
+                </button>
+              </div>
+            </ProLock>
+
+            {/* Full karaoke — every word renders as part of a karaoke chunk. */}
+            <ProLock
+              paywallTitle="Full karaoke is a Pro feature"
+              paywallDescription="Upgrade to read the whole book in karaoke mode — every word highlights in flowing context, not flash-card style. $0.99/month or $7.99/year."
+            >
+              <div
+                className="flex items-center justify-between py-2 px-4 rounded-lg"
+                style={{ backgroundColor: 'var(--bg-secondary)' }}
+              >
+                <div className="min-w-0 pr-4">
+                  <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                    Full karaoke mode
+                  </div>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                    Render the entire book as flowing karaoke chunks instead of single-word RSVP. Easier to follow with context; same pacing.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setFullKaraoke(!fullKaraoke)}
+                  className="w-10 h-6 rounded-full relative transition-colors shrink-0"
+                  style={{
+                    backgroundColor: fullKaraoke ? 'var(--accent)' : 'var(--bg-tertiary)',
+                  }}
+                  aria-pressed={fullKaraoke}
+                >
+                  <div
+                    className="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform"
+                    style={{
+                      transform: fullKaraoke ? 'translateX(20px)' : 'translateX(4px)',
                     }}
                   />
                 </button>

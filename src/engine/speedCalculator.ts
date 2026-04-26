@@ -1,22 +1,30 @@
-import type { WordToken, SpeedProfile } from '@/types/rsvp';
+import type { WordToken, SpeedProfile, SpeedRule } from '@/types/rsvp';
 
 /**
- * Get the target WPM for a word based on matching rules.
- * When multiple rules match, the slowest one wins (lowest WPM).
- * Returns null if no rules match (use base WPM).
+ * Get the rule whose WPM applies to this word. When multiple rules match,
+ * the slowest one wins (lowest WPM). Returns null if no rules match
+ * (use base WPM).
+ *
+ * The full rule (not just the WPM) is returned so the playback controller
+ * can read `causesRamp` to decide whether to engage the transition ramp.
  */
-export function getRuleWpm(token: WordToken, profile: SpeedProfile): number | null {
-  let slowest: number | null = null;
-
+export function getMatchedRule(token: WordToken, profile: SpeedProfile): SpeedRule | null {
+  let winner: SpeedRule | null = null;
   for (const rule of profile.rules) {
     if (rule.enabled && token.context[rule.condition]) {
-      if (slowest === null || rule.wpm < slowest) {
-        slowest = rule.wpm;
+      if (winner === null || rule.wpm < winner.wpm) {
+        winner = rule;
       }
     }
   }
+  return winner;
+}
 
-  return slowest;
+/**
+ * Convenience wrapper for callers that only need the target WPM.
+ */
+export function getRuleWpm(token: WordToken, profile: SpeedProfile): number | null {
+  return getMatchedRule(token, profile)?.wpm ?? null;
 }
 
 /**

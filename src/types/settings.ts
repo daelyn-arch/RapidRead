@@ -37,6 +37,14 @@ export interface AppSettings {
    * readers prefer the consistency of single-word display.
    */
   karaokeDialogue: boolean;
+  /**
+   * Full karaoke mode — render the entire chapter as moving-highlight
+   * chunks instead of one-word-at-a-time RSVP. Useful for readers who
+   * find context-aware karaoke easier to follow than single-word flash.
+   * When this is on, `karaokeDialogue` is effectively a no-op (every
+   * word is karaoke regardless).
+   */
+  fullKaraoke: boolean;
   /** Minimum character count for a word to be treated as a "long word". */
   longWordThreshold: number;
 }
@@ -49,11 +57,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
   fontFamily: 'system-ui, -apple-system, sans-serif',
   readingFont: 'system',
   showORP: true,
-  orpColor: '#ef4444',
+  orpColor: '#ec4899',
   dialogueColor: '#60a5fa',
   unfamiliarColor: '#fbbf24',
   autoBookmark: true,
   customKnownWords: [],
   karaokeDialogue: false,
+  fullKaraoke: false,
   longWordThreshold: 9,
 };

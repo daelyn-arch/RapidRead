@@ -1,5 +1,5 @@
 import type { WordToken, SpeedProfile } from '@/types/rsvp';
-import { getRuleWpm, wpmToDelay } from './speedCalculator';
+import { getMatchedRule, wpmToDelay } from './speedCalculator';
 
 export type PlaybackListener = {
   onWord: (token: WordToken, index: number, effectiveWpm: number) => void;
@@ -108,16 +108,16 @@ export class PlaybackController {
   }
 
   private getEffectiveWpm(token: WordToken): number {
-    const ruleWpm = getRuleWpm(token, this.profile);
+    const rule = getMatchedRule(token, this.profile);
     const { baseWpm, transitionStep } = this.profile;
 
-    if (ruleWpm !== null) {
+    if (rule !== null) {
       // A rule matched. Use its WPM.
-      // Seed the ramp with rule WPM *only* if the rule is slower than base
-      // — if the rule is faster than base, there's nothing to ramp toward,
-      // we'll just snap back to base on the next non-rule word.
-      this.rampedWpm = ruleWpm < baseWpm ? ruleWpm : null;
-      return ruleWpm;
+      // Seed the ramp only if (a) the rule is slower than base AND
+      // (b) the rule opts into causing a ramp. Otherwise the next
+      // non-rule word snaps straight back to base.
+      this.rampedWpm = rule.wpm < baseWpm && rule.causesRamp ? rule.wpm : null;
+      return rule.wpm;
     }
 
     // No rule. Decide between ramping and straight base-WPM.
