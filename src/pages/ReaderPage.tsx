@@ -5,6 +5,7 @@ import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useRsvpPlayback } from '@/hooks/useRsvpPlayback';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
+import { useReadingTracker } from '@/hooks/useReadingTracker';
 import { loadBookContent } from '@/services/storageService';
 import { downloadBookContentByClientId } from '@/sync/bookSync';
 import { useAuth } from '@/auth/useAuth';
@@ -301,6 +302,9 @@ export default function ReaderPage() {
   }), [playback, setBaseWpm, getActiveProfile, loadChapter, currentChapterIndex, navigate]);
 
   useKeyboardControls(keyboardActions);
+  // Track words read + reading time per day. Pushes 30s rollups to
+  // reading_stats_daily for the analytics page.
+  useReadingTracker();
 
   if (loading) {
     return (
