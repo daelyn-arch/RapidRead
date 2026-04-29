@@ -497,18 +497,28 @@ export default function ReaderPage() {
         </div>
       )}
 
-      {/* Main content area */}
+      {/* Main content area. Both views are kept mounted; we toggle
+          visibility instead of conditionally rendering. Long chapters
+          (10k-30k words) take 1-3s to render the page-view DOM tree —
+          paying that cost once on chapter load (in parallel with
+          starting RSVP) keeps the Page/RSVP toggle instant afterwards. */}
       <div className="flex-1 flex flex-col min-h-0 relative">
-        {viewMode === 'rsvp' ? (
+        <div
+          style={{
+            display: viewMode === 'rsvp' ? 'flex' : 'none',
+            flex: 1,
+            flexDirection: 'column',
+          }}
+        >
           <RsvpDisplay token={currentToken} onTapToggle={playback.toggle} />
-        ) : (
-          <PageView
-            tokens={tokens}
-            currentIndex={currentTokenIndex}
-            onWordClick={handleWordClick}
-            onWordLongPress={handleWordLongPress}
-          />
-        )}
+        </div>
+        <PageView
+          tokens={tokens}
+          currentIndex={currentTokenIndex}
+          onWordClick={handleWordClick}
+          onWordLongPress={handleWordLongPress}
+          visible={viewMode === 'page'}
+        />
 
         {/* Top-left: Bookmarks — floats over the word area */}
         {!focusMode && (

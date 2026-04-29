@@ -28,6 +28,43 @@ export function getRuleWpm(token: WordToken, profile: SpeedProfile): number | nu
 }
 
 /**
+ * Estimate how many seconds it'll take to read `tokens[fromIndex..end]`
+ * under the given profile. Faithfully mirrors PlaybackController's
+ * effective-WPM logic so the UI estimate matches the user's actual
+ * pacing — counting per-token rule WPMs (dialogue, unfamiliar,
+ * sentence-end, etc.) and the transition ramp back to base.
+ */
+export function estimateRemainingSeconds(
+  tokens: WordToken[],
+  fromIndex: number,
+  profile: SpeedProfile,
+): number {
+  const { baseWpm, transitionStep } = profile;
+  let totalSeconds = 0;
+  let rampedWpm: number | null = null;
+
+  const start = Math.max(0, fromIndex);
+  for (let i = start; i < tokens.length; i++) {
+    const rule = getMatchedRule(tokens[i], profile);
+    let wpm: number;
+    if (rule !== null) {
+      wpm = rule.wpm;
+      rampedWpm = rule.wpm < baseWpm && rule.causesRamp ? rule.wpm : null;
+    } else if (rampedWpm === null || transitionStep <= 0) {
+      wpm = baseWpm;
+      rampedWpm = null;
+    } else {
+      const next = Math.min(rampedWpm + transitionStep, baseWpm);
+      rampedWpm = next >= baseWpm ? null : next;
+      wpm = next;
+    }
+    totalSeconds += 60 / Math.max(1, wpm);
+  }
+
+  return totalSeconds;
+}
+
+/**
  * Calculate the display delay in ms for a given effective WPM.
  */
 export function wpmToDelay(wpm: number): number {

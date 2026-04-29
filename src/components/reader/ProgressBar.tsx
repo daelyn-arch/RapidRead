@@ -1,4 +1,7 @@
+import { useMemo } from 'react';
 import { useEffectiveProfile } from '@/billing/useEffectiveProfile';
+import { useReaderStore } from '@/store/readerStore';
+import { estimateRemainingSeconds } from '@/engine/speedCalculator';
 
 interface Props {
   current: number;
@@ -19,13 +22,18 @@ function formatTimeLeft(seconds: number): string {
 
 export default function ProgressBar({ current, total, onSeek, chapterTitle, isPlaying }: Props) {
   const profile = useEffectiveProfile();
+  const tokens = useReaderStore(s => s.tokens);
   const percent = total > 0 ? (current / total) * 100 : 0;
   const wordsRemaining = total - current;
-  // Estimate based on the user's current base WPM. Free users read at base,
-  // Pro users have rule slowdowns that average out near base for most books,
-  // so this is a close-enough number that updates live as the speed changes.
-  const wpm = Math.max(1, profile.baseWpm);
-  const secondsRemaining = (wordsRemaining * 60) / wpm;
+
+  // Walk the remaining tokens and sum up per-token effective time so the
+  // estimate reflects dialogue/unfamiliar/sentence-end/etc. slowdowns and
+  // the transition ramp — not just base WPM. Memoised so we only recompute
+  // when position, tokens, or profile change.
+  const secondsRemaining = useMemo(
+    () => estimateRemainingSeconds(tokens, current, profile),
+    [tokens, current, profile],
+  );
   const timeLeft = formatTimeLeft(secondsRemaining);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {

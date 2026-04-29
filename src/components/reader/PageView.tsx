@@ -7,6 +7,11 @@ interface Props {
   currentIndex: number;
   onWordClick: (index: number) => void;
   onWordLongPress?: (index: number, rect: DOMRect) => void;
+  /** When false, the view is mounted but visually hidden. Lets us pay
+   *  the render cost once on chapter load instead of on every toggle —
+   *  important on long chapters (10k-30k words) where a fresh mount
+   *  noticeably stutters the UI. */
+  visible?: boolean;
 }
 
 const CONTEXT_COLORS = {
@@ -17,7 +22,7 @@ const CONTEXT_COLORS = {
 const LONG_PRESS_MS = 500;
 const MOVE_THRESHOLD_PX = 10;
 
-export default function PageView({ tokens, currentIndex, onWordClick, onWordLongPress }: Props) {
+export default function PageView({ tokens, currentIndex, onWordClick, onWordLongPress, visible = true }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLSpanElement>(null);
   const { fontFamily } = useSettingsStore(s => s.settings);
@@ -34,18 +39,22 @@ export default function PageView({ tokens, currentIndex, onWordClick, onWordLong
     }
   }
 
-  // Auto-scroll to keep the current word visible
+  // Auto-scroll to keep the current word visible. Skipped when hidden —
+  // scrollIntoView on a display:none element is a no-op anyway, but
+  // skipping avoids the work entirely.
   useEffect(() => {
+    if (!visible) return;
     if (activeRef.current) {
       activeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [currentIndex]);
+  }, [currentIndex, visible]);
 
   return (
     <div
       ref={containerRef}
       className="flex-1 overflow-y-auto px-6 pt-14 pb-8 max-w-3xl mx-auto w-full leading-relaxed cursor-default"
       style={{
+        display: visible ? 'block' : 'none',
         fontFamily: 'var(--reading-font-family, inherit)',
         // Back-compat: fall back to the legacy fontFamily if the CSS var isn't set.
         ...(fontFamily ? { fontFamily: `var(--reading-font-family, ${fontFamily})` } : {}),
