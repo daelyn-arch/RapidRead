@@ -35,6 +35,13 @@ export default function ProgressBar({ current, total, onSeek, chapterTitle, isPl
     [tokens, current, profile],
   );
   const timeLeft = formatTimeLeft(secondsRemaining);
+  // Average effective WPM for the rest of the chapter given current
+  // settings (rules + transition ramp). Reads as "what speed will I
+  // actually average from here on?" — useful sanity check vs. baseWpm
+  // when many slowdown rules are active.
+  const avgWpm = wordsRemaining > 0 && secondsRemaining > 0
+    ? Math.round((wordsRemaining * 60) / secondsRemaining)
+    : profile.baseWpm;
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -69,11 +76,11 @@ export default function ProgressBar({ current, total, onSeek, chapterTitle, isPl
         <span className="flex items-center gap-2 shrink-0">
           <span className="hidden sm:inline">
             {percent.toFixed(1)}% &middot; {current}/{total} words
-            {wordsRemaining > 0 && ` · ~${timeLeft} left`}
+            {wordsRemaining > 0 && ` · ~${timeLeft} left · ${avgWpm} wpm avg`}
           </span>
           <span className="sm:hidden">
             {percent.toFixed(0)}% · {current}/{total}
-            {wordsRemaining > 0 && ` · ${timeLeft}`}
+            {wordsRemaining > 0 && ` · ${timeLeft} · ${avgWpm}wpm`}
           </span>
           {isPlaying !== undefined && (
             <span
