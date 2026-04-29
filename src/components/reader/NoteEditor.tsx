@@ -35,7 +35,7 @@ export default function NoteEditor({ initialNote = '', onSave, onCancel }: Props
           }
         }}
         rows={3}
-        placeholder="Add a note for this spot…"
+        placeholder="Add a note for this spot — or leave blank for a plain bookmark"
         className="w-full rounded-md px-3 py-2 outline-none border resize-none"
         style={{
           background: 'var(--bg-primary)',

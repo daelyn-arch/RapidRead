@@ -108,19 +108,11 @@ export default function WordActionsMenu({
           </button>
           <button
             type="button"
-            onClick={() => { onBookmark(); onClose(); }}
-            className="w-full text-left px-3 py-2 hover:opacity-80 text-sm"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            🔖 Bookmark this spot
-          </button>
-          <button
-            type="button"
             onClick={() => setPanel('note')}
             className="w-full text-left px-3 py-2 hover:opacity-80 text-sm"
             style={{ color: 'var(--text-primary)' }}
           >
-            📝 Add note
+            🔖 Bookmark — note optional
           </button>
           <button
             type="button"
