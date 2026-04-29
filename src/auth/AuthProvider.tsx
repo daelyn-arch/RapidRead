@@ -21,6 +21,8 @@ interface AuthContextValue {
   signUp: (email: string, password: string) => Promise<{ error: string | null; alreadyExists?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  /** Update the signed-in user's password. Requires an active session. */
+  changePassword: (newPassword: string) => Promise<{ error: string | null }>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -135,6 +137,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     async refreshProfile() {
       if (session?.user) await fetchProfile(session.user.id);
+    },
+    async changePassword(newPassword: string) {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      return { error: error?.message ?? null };
     },
   }), [session, profile, loading]);
 

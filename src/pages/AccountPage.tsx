@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -33,12 +33,35 @@ const FREE_FEATURES: string[] = [
 ];
 
 export default function AccountPage() {
-  const { user, profile, loading, signOut, refreshProfile } = useAuth();
+  const { user, profile, loading, signOut, refreshProfile, changePassword } = useAuth();
   const isPro = useIsPro();
   const navigate = useNavigate();
   const theme = useSettingsStore(s => s.settings.theme);
   const [params] = useSearchParams();
   const justUpgraded = params.get('checkout') === 'success';
+
+  // Change-password form state
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwNew, setPwNew] = useState('');
+  const [pwConfirm, setPwConfirm] = useState('');
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwSuccess, setPwSuccess] = useState(false);
+
+  async function handleChangePassword() {
+    setPwError(null);
+    setPwSuccess(false);
+    if (pwNew.length < 8) { setPwError('Password must be at least 8 characters.'); return; }
+    if (pwNew !== pwConfirm) { setPwError('Passwords do not match.'); return; }
+    setPwSaving(true);
+    const { error } = await changePassword(pwNew);
+    setPwSaving(false);
+    if (error) { setPwError(error); return; }
+    setPwNew('');
+    setPwConfirm('');
+    setPwSuccess(true);
+    window.setTimeout(() => setPwSuccess(false), 4000);
+  }
 
   useEffect(() => {
     if (!loading && !user) navigate('/login?next=/app/account', { replace: true });
@@ -187,6 +210,85 @@ export default function AccountPage() {
             $0.99/month or $7.99/year. Cancel anytime. Secure payments by Stripe.
           </p>
         )}
+
+        {/* Change password */}
+        <section>
+          {!pwOpen ? (
+            <button
+              type="button"
+              onClick={() => setPwOpen(true)}
+              className="w-full rounded-md py-2 font-medium border transition-opacity hover:opacity-80"
+              style={{
+                borderColor: 'var(--bg-tertiary)',
+                color: 'var(--text-secondary)',
+                background: 'transparent',
+              }}
+            >
+              Change password
+            </button>
+          ) : (
+            <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--bg-secondary)' }}>
+              <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                Change password
+              </div>
+              <input
+                type="password"
+                placeholder="New password (min 8 chars)"
+                value={pwNew}
+                onChange={(e) => setPwNew(e.target.value)}
+                autoComplete="new-password"
+                className="w-full rounded-md px-3 py-2 text-sm border"
+                style={{
+                  background: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--bg-tertiary)',
+                }}
+              />
+              <input
+                type="password"
+                placeholder="Confirm new password"
+                value={pwConfirm}
+                onChange={(e) => setPwConfirm(e.target.value)}
+                autoComplete="new-password"
+                className="w-full rounded-md px-3 py-2 text-sm border"
+                style={{
+                  background: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--bg-tertiary)',
+                }}
+              />
+              {pwError && (
+                <p className="text-xs" style={{ color: '#fca5a5' }}>{pwError}</p>
+              )}
+              {pwSuccess && (
+                <p className="text-xs" style={{ color: '#86efac' }}>Password updated.</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleChangePassword}
+                  disabled={pwSaving || !pwNew || !pwConfirm}
+                  className="flex-1 rounded-md py-2 text-sm font-medium border transition-opacity hover:opacity-80 disabled:opacity-50"
+                  style={{
+                    borderColor: 'var(--accent)',
+                    color: 'var(--accent)',
+                    background: 'transparent',
+                  }}
+                >
+                  {pwSaving ? 'Saving…' : 'Save new password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPwOpen(false); setPwNew(''); setPwConfirm(''); setPwError(null); }}
+                  className="rounded-md px-3 text-sm transition-opacity hover:opacity-80"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Sign out — deliberate, bottom of the page */}
         <button
