@@ -62,6 +62,19 @@ export default function LibraryPage() {
               <circle cx="12" cy="7" r="4" />
             </svg>
           </button>
+          <button
+            onClick={() => navigate('/app/analytics')}
+            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--text-secondary)' }}
+            title="Reading analytics"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="20" x2="21" y2="20" />
+              <rect x="5" y="11" width="3" height="9" />
+              <rect x="10.5" y="6" width="3" height="14" />
+              <rect x="16" y="13" width="3" height="7" />
+            </svg>
+          </button>
         <button
           onClick={() => navigate('/app/settings')}
           className="p-2 rounded-lg hover:opacity-80 transition-opacity"

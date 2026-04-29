@@ -6,6 +6,7 @@ import SettingsPage from '@/pages/SettingsPage'
 import LandingPage from '@/pages/LandingPage'
 import PricingPage from '@/pages/PricingPage'
 import AccountPage from '@/pages/AccountPage'
+import AnalyticsPage from '@/pages/AnalyticsPage'
 import LoginPage from '@/auth/LoginPage'
 import AuthCallbackPage from '@/auth/AuthCallbackPage'
 import { CloudSyncMount } from '@/sync/useCloudSync'
@@ -60,6 +61,7 @@ function App() {
         <Route path="/app/read/:bookId" element={<ReaderPage />} />
         <Route path="/app/settings" element={<SettingsPage />} />
         <Route path="/app/account" element={<AccountPage />} />
+        <Route path="/app/analytics" element={<AnalyticsPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
