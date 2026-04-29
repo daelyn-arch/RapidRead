@@ -22,6 +22,11 @@ import { recordDailyDelta, localDayKey } from '@/sync/statsSync';
  */
 const FLUSH_INTERVAL_MS = 30_000;
 const PAUSE_GRACE_MS = 2_000;
+/** Max forward step we'll attribute to actual reading. Natural playback
+ *  advances 1 word at a time; even rapid skip-forward bumps a few words.
+ *  Anything bigger is a seek/jump (chapter resume from saved position,
+ *  progress-bar drag, contents-jump, etc.) and should not count. */
+const MAX_NATURAL_STEP = 5;
 
 export function useReadingTracker() {
   const { user } = useAuth();
@@ -63,18 +68,21 @@ export function useReadingTracker() {
     });
   }
 
-  // Word counter — advance the words buffer when the active token index
-  // moves forward.
+  // Word counter — only credit small forward steps that happened while
+  // the user was actively playing. Big jumps (chapter-resume from saved
+  // position, progress-bar seeks, contents-jump) and any movement while
+  // paused don't count as "read".
   useEffect(() => {
     if (lastIndex.current === null) {
       lastIndex.current = currentTokenIndex;
       return;
     }
-    if (currentTokenIndex > lastIndex.current) {
-      wordsBuffer.current += currentTokenIndex - lastIndex.current;
+    const delta = currentTokenIndex - lastIndex.current;
+    if (isPlaying && delta > 0 && delta <= MAX_NATURAL_STEP) {
+      wordsBuffer.current += delta;
     }
     lastIndex.current = currentTokenIndex;
-  }, [currentTokenIndex]);
+  }, [currentTokenIndex, isPlaying]);
 
   // Time counter — only ticks while playing. Uses real elapsed time
   // between ticks to stay accurate even if the timer drifts.
