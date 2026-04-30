@@ -18,7 +18,7 @@ export default defineConfig({
   retries: 0,
   reporter: [['list']],
   use: {
-    baseURL: process.env.AUDIT_URL ?? 'https://rapidread-six.vercel.app',
+    baseURL: process.env.AUDIT_URL ?? 'https://rapidreading.app',
     headless: true,
     viewport: { width: 1280, height: 900 },
     screenshot: 'only-on-failure',
