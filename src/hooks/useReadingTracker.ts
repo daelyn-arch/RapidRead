@@ -34,6 +34,7 @@ export function useReadingTracker() {
 
   const isPlaying = useReaderStore((s) => s.isPlaying);
   const currentTokenIndex = useReaderStore((s) => s.currentTokenIndex);
+  const lastSeekAt = useReaderStore((s) => s.lastSeekAt);
 
   const wordsBuffer = useRef(0);
   const secondsBuffer = useRef(0);
@@ -68,21 +69,28 @@ export function useReadingTracker() {
     });
   }
 
-  // Word counter — only credit small forward steps that happened while
-  // the user was actively playing. Big jumps (chapter-resume from saved
-  // position, progress-bar seeks, contents-jump) and any movement while
-  // paused don't count as "read".
+  // Word counter — only credit forward steps that:
+  //   - happened while playing (isPlaying === true)
+  //   - are tiny (delta <= MAX_NATURAL_STEP), AND
+  //   - did NOT happen immediately after a seek/skip
+  //
+  // The seek check catches the slip-through case where a small forward
+  // jump (e.g. word-click 3 words ahead) looks identical to natural
+  // playback. useRsvpPlayback now stamps lastSeekAt on every seek/skip,
+  // and we ignore any token-index change within SEEK_DEBOUNCE_MS of it.
+  const SEEK_DEBOUNCE_MS = 250;
   useEffect(() => {
     if (lastIndex.current === null) {
       lastIndex.current = currentTokenIndex;
       return;
     }
     const delta = currentTokenIndex - lastIndex.current;
-    if (isPlaying && delta > 0 && delta <= MAX_NATURAL_STEP) {
+    const justSeeked = Date.now() - lastSeekAt < SEEK_DEBOUNCE_MS;
+    if (isPlaying && !justSeeked && delta > 0 && delta <= MAX_NATURAL_STEP) {
       wordsBuffer.current += delta;
     }
     lastIndex.current = currentTokenIndex;
-  }, [currentTokenIndex, isPlaying]);
+  }, [currentTokenIndex, isPlaying, lastSeekAt]);
 
   // Time counter — only ticks while playing. Uses real elapsed time
   // between ticks to stay accurate even if the timer drifts.

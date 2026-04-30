@@ -19,11 +19,16 @@ interface ReaderState {
   dialogueBlockIndex: Map<number, DialogueBlock>;
   /** Block index covering EVERY token (used by full-karaoke mode). */
   allKaraokeBlockIndex: Map<number, DialogueBlock>;
+  /** Wall-clock ms of the most recent seek/skip. Tracker uses this to
+   *  discard the next token-index change so word-click jumps don't get
+   *  counted as words read. */
+  lastSeekAt: number;
   setBook: (bookId: string) => void;
   setChapter: (chapterIndex: number) => void;
   setTokens: (tokens: WordToken[]) => void;
   setCurrentToken: (token: WordToken | null, index: number, effectiveWpm?: number) => void;
   setPlaying: (playing: boolean) => void;
+  markSeek: () => void;
   reset: () => void;
 }
 
@@ -38,6 +43,7 @@ export const useReaderStore = create<ReaderState>()((set) => ({
   dialogueBlocks: [],
   dialogueBlockIndex: new Map(),
   allKaraokeBlockIndex: new Map(),
+  lastSeekAt: 0,
 
   setBook: (bookId: string) => set({ currentBookId: bookId }),
   setChapter: (chapterIndex: number) => set({ currentChapterIndex: chapterIndex }),
@@ -53,6 +59,7 @@ export const useReaderStore = create<ReaderState>()((set) => ({
     effectiveWpm: effectiveWpm ?? 0,
   }),
   setPlaying: (playing: boolean) => set({ isPlaying: playing }),
+  markSeek: () => set({ lastSeekAt: Date.now() }),
   reset: () => set({
     currentBookId: null,
     currentChapterIndex: 0,

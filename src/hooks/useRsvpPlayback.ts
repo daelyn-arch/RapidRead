@@ -73,9 +73,19 @@ export function useRsvpPlayback() {
     }
   }, [play, pause]);
 
-  const seekTo = useCallback((index: number) => controllerRef.current?.seekTo(index), []);
-  const skipForward = useCallback((count = 1) => controllerRef.current?.skipForward(count), []);
-  const skipBack = useCallback((count = 1) => controllerRef.current?.skipBack(count), []);
+  const markSeek = useReaderStore(s => s.markSeek);
+  const seekTo = useCallback((index: number) => {
+    markSeek();
+    controllerRef.current?.seekTo(index);
+  }, [markSeek]);
+  const skipForward = useCallback((count = 1) => {
+    markSeek();
+    controllerRef.current?.skipForward(count);
+  }, [markSeek]);
+  const skipBack = useCallback((count = 1) => {
+    markSeek();
+    controllerRef.current?.skipBack(count);
+  }, [markSeek]);
 
   const updateProfile = useCallback((profile: SpeedProfile) => {
     controllerRef.current?.setProfile(profile);
