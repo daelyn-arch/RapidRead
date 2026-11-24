@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLibraryStore } from '@/store/libraryStore';
-import { useSettingsStore } from '@/store/settingsStore';
+import { useEffectiveTheme } from '@/billing/useEffectiveTheme';
 import { useBookImport } from '@/hooks/useBookImport';
 import ImportButton from '@/components/library/ImportButton';
 import BookList from '@/components/library/BookList';
@@ -12,7 +12,7 @@ export default function LibraryPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { books, progress } = useLibraryStore();
-  const theme = useSettingsStore(s => s.settings.theme);
+  const theme = useEffectiveTheme();
   const { importFile, importing, error, clearError } = useBookImport();
   const [verifiedBannerOpen, setVerifiedBannerOpen] = useState(() => params.get('verified') === '1');
   const [samplesOpen, setSamplesOpen] = useState(false);

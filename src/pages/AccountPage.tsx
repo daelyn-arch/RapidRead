@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
-import { useSettingsStore } from '@/store/settingsStore';
+import { useEffectiveTheme } from '@/billing/useEffectiveTheme';
 import { useIsPro } from '@/billing/useIsPro';
 import UpgradeButton from '@/billing/UpgradeButton';
 import ManageBillingButton from '@/billing/ManageBillingButton';
@@ -36,7 +36,7 @@ export default function AccountPage() {
   const { user, profile, loading, signOut, refreshProfile, changePassword } = useAuth();
   const isPro = useIsPro();
   const navigate = useNavigate();
-  const theme = useSettingsStore(s => s.settings.theme);
+  const theme = useEffectiveTheme();
   const [params] = useSearchParams();
   const justUpgraded = params.get('checkout') === 'success';
 

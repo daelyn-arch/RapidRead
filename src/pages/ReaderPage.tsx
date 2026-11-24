@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useReaderStore } from '@/store/readerStore';
 import { useLibraryStore } from '@/store/libraryStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useEffectiveTheme } from '@/billing/useEffectiveTheme';
 import { useRsvpPlayback } from '@/hooks/useRsvpPlayback';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
 import { useReadingTracker } from '@/hooks/useReadingTracker';
@@ -79,7 +80,7 @@ export default function ReaderPage() {
   const addBookmark = useLibraryStore(s => s.addBookmark);
   const setBaseWpm = useSettingsStore(s => s.setBaseWpm);
   const getActiveProfile = useSettingsStore(s => s.getActiveProfile);
-  const theme = useSettingsStore(s => s.settings.theme);
+  const theme = useEffectiveTheme();
 
   const playback = useRsvpPlayback();
   const savedPositionRef = useRef(0);

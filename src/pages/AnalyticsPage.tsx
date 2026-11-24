@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useEffectiveTheme } from '@/billing/useEffectiveTheme';
 import { fetchDailyStats, localDayKey, type DailyStat } from '@/sync/statsSync';
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'all';
@@ -207,7 +208,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 export default function AnalyticsPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const theme = useSettingsStore((s) => s.settings.theme);
+  const theme = useEffectiveTheme();
   const baseWpm = useSettingsStore((s) => s.getActiveProfile().baseWpm);
   const [period, setPeriod] = useState<Period>('week');
   const [daily, setDaily] = useState<DailyStat[] | null>(null);

@@ -1,6 +1,30 @@
 import { createContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase, supabaseConfigured } from '@/lib/supabaseClient';
+import { withTimeout } from '@/lib/withTimeout';
+
+// When Supabase is unreachable, auth-js retries a stale session's token
+// refresh with backoff for ~25s per call while holding the auth lock. Never
+// let the UI wait on that: give up after this long and carry on signed out.
+const AUTH_TIMEOUT_MS = 5000;
+const UNREACHABLE_MSG = "Couldn't reach the RapidRead server. Please try again later.";
+
+/** Drop the persisted Supabase session without a network round trip. */
+function clearLocalAuthSession() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (/^sb-.+-auth-token/.test(key)) localStorage.removeItem(key);
+    }
+  } catch {
+    // storage unavailable (private mode etc.); nothing to clear
+  }
+}
+
+function friendlyAuthError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/timed out|failed to fetch|networkerror|load failed/i.test(msg)) return UNREACHABLE_MSG;
+  return msg;
+}
 
 export interface Profile {
   id: string;
@@ -71,16 +95,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      if (data.session?.user) {
-        fetchProfile(data.session.user.id).finally(() => active && setLoading(false));
-        subscribeToProfile(data.session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    withTimeout(supabase.auth.getSession(), AUTH_TIMEOUT_MS, 'getSession')
+      .then(({ data }) => {
+        if (!active) return;
+        setSession(data.session);
+        if (data.session?.user) {
+          subscribeToProfile(data.session.user.id);
+          return withTimeout(fetchProfile(data.session.user.id), AUTH_TIMEOUT_MS, 'fetchProfile');
+        }
+      })
+      .catch((err) => {
+        // Unreachable backend: run as signed out. If getSession resolves
+        // later, onAuthStateChange will pick the session back up.
+        console.warn('[auth] session restore failed', err);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
@@ -110,8 +141,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     configured: supabaseConfigured,
     async signIn(email, password) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error: error?.message ?? null };
+      try {
+        const { error } = await withTimeout(
+          supabase.auth.signInWithPassword({ email, password }),
+          AUTH_TIMEOUT_MS * 3,
+          'signIn',
+        );
+        return { error: error ? friendlyAuthError(error) : null };
+      } catch (err) {
+        return { error: friendlyAuthError(err) };
+      }
     },
     async signUp(email, password) {
       const emailRedirectTo = typeof window !== 'undefined'
@@ -133,7 +172,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null, alreadyExists };
     },
     async signOut() {
-      await supabase.auth.signOut();
+      let failed = false;
+      try {
+        const { error } = await withTimeout(supabase.auth.signOut(), AUTH_TIMEOUT_MS, 'signOut');
+        failed = !!error;
+      } catch {
+        failed = true;
+      }
+      // auth-js bails out before clearing local storage when it can't reach
+      // the server, which leaves the user stuck signed in. Sign out locally.
+      if (failed) {
+        clearLocalAuthSession();
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+        setSession(null);
+        setProfile(null);
+      }
     },
     async refreshProfile() {
       if (session?.user) await fetchProfile(session.user.id);

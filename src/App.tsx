@@ -13,7 +13,6 @@ import { CloudSyncMount } from '@/sync/useCloudSync'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useIsPro } from '@/billing/useIsPro'
 
-const PRO_THEMES = new Set(['sepia', 'parchment'])
 const FREE_FONT = 'system'
 
 /**
@@ -30,26 +29,11 @@ function ReadingFontSync() {
   return null
 }
 
-/**
- * Make sure Free users can't keep a Pro-only theme (sepia, parchment).
- * The theme is still stored in settings so upgrading restores it.
- */
-function ThemeGate() {
-  const theme = useSettingsStore(s => s.settings.theme)
-  const setTheme = useSettingsStore(s => s.setTheme)
-  const isPro = useIsPro()
-  useEffect(() => {
-    if (!isPro && PRO_THEMES.has(theme)) setTheme('dark')
-  }, [isPro, theme, setTheme])
-  return null
-}
-
 function App() {
   return (
     <>
       <CloudSyncMount />
       <ReadingFontSync />
-      <ThemeGate />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/pricing" element={<PricingPage />} />
